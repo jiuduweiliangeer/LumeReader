@@ -1,0 +1,71 @@
+﻿; Lume Reader Simplified Chinese installer messages.
+; Copyright (C) 2026 Lume Reader contributors, AGPL-3.0-only.
+; Unspecified messages inherit the Inno Setup default language.
+[LangOptions]
+LanguageName=简体中文
+LanguageID=$0804
+LanguageCodePage=936
+DialogFontName=Microsoft YaHei UI
+DialogFontSize=9
+[Messages]
+SetupAppTitle=安装
+SetupWindowTitle=安装 - %1
+UninstallAppTitle=卸载
+UninstallAppFullTitle=%1 卸载
+InformationTitle=信息
+ConfirmTitle=确认
+ErrorTitle=错误
+ButtonBack=< 上一步(&B)
+ButtonNext=下一步(&N) >
+ButtonInstall=安装(&I)
+ButtonOK=确定
+ButtonCancel=取消
+ButtonYes=是(&Y)
+ButtonNo=否(&N)
+ButtonFinish=完成(&F)
+ButtonBrowse=浏览(&B)...
+ButtonWizardBrowse=浏览(&R)...
+SelectLanguageTitle=选择安装语言
+SelectLanguageLabel=请选择安装向导使用的语言。
+ClickNext=点击“下一步”继续，或点击“取消”退出。
+ExitSetupTitle=退出安装
+ExitSetupMessage=安装尚未完成。确定退出安装向导吗？
+WelcomeLabel1=欢迎使用 [name] 安装向导
+WelcomeLabel2=将在您的计算机上安装 [name/ver]。%n%n请在继续前关闭正在运行的轻阅窗口。
+WizardLicense=开源许可协议
+LicenseLabel=请阅读以下开源许可协议。
+LicenseLabel3=完整英文协议具有约束力，中文说明可在安装后的“开源协议”中查看。
+LicenseAccepted=我接受此协议(&A)
+LicenseNotAccepted=我不接受此协议(&D)
+WizardSelectDir=选择安装位置
+SelectDirDesc=将 [name] 安装到哪个文件夹？
+SelectDirLabel3=程序将安装到下面的文件夹。
+SelectDirBrowseLabel=点击“下一步”继续，或点击“浏览”选择其他位置。
+DiskSpaceMBLabel=至少需要 [mb] MB 可用空间。
+DiskSpaceGBLabel=至少需要 [gb] GB 可用空间。
+WizardSelectTasks=附加选项
+SelectTasksDesc=选择快捷方式等附加选项。
+SelectTasksLabel2=请选择安装时执行的附加任务。
+WizardReady=准备安装
+ReadyLabel1=安装向导已准备好安装 [name]。
+ReadyLabel2a=点击“安装”继续，或点击“上一步”修改设置。
+ReadyLabel2b=点击“安装”继续。
+ReadyMemoDir=安装位置：
+ReadyMemoGroup=开始菜单：
+ReadyMemoTasks=附加选项：
+WizardInstalling=正在安装
+InstallingLabel=正在安装 [name]，请稍候。
+FinishedHeadingLabel=[name] 安装完成
+FinishedLabelNoIcons=程序已成功安装。
+FinishedLabel=程序已成功安装，可通过快捷方式启动。
+ClickFinish=点击“完成”退出安装向导。
+StatusExtractFiles=正在复制文件...
+StatusCreateIcons=正在创建快捷方式...
+StatusCreateRegistryEntries=正在登记卸载信息...
+UninstallStatusLabel=正在卸载 %1...
+ConfirmUninstall=确定卸载 %1 及其程序组件吗？%n%n用户书籍、设置和备份将保留。
+UninstalledAll=%1 已卸载。用户数据已保留。
+[CustomMessages]
+CreateDesktopIcon=创建桌面快捷方式
+LaunchProgram=启动 %1
+AdditionalIcons=快捷方式：

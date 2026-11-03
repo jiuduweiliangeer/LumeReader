@@ -1,0 +1,42 @@
+"""Shared definition of the inline-image placeholder token.
+
+`extract_text_from_html` (converter.py) emits each `<img>` as a control-char
+token; the converter later strips tokens to decide whether a page is
+image-only, and `native_generator._build_chapter_content` parses them back
+into image chunks. Both layers must agree on the token's exact shape.
+
+This lived in two places (a #132 review NOTE, #128-class duplication). It
+can't live in converter.py because converter imports native_generator — the
+reverse import would be circular — so the canonical definition lives here and
+both import it.
+
+Format: ``\\x00IMG\\x01<href>\\x01<alt-with-x02-spaces>[\\x01<size>[\\x01<float>]]\\x00``
+
+The optional third field is the size the markup asked for — ``w=98%``,
+``w=200px``, ``h=50%`` — so the generator can honour it the way Amazon's
+converter does instead of sizing every image from its pixel width. A
+two-field token still matches; the group is simply None.
+
+The optional fourth field is ``left`` or ``right`` for a floated image
+(#243); its size field may then be empty.
+
+The optional fifth is what a picture inside a paragraph's words keeps
+besides its size (#565): ``h=<height>`` when a width is also given, and
+``va=<vertical-align>``, joined by ``;``. The fields before it may be empty.
+"""
+
+import re
+
+#: Token field delimiters. All non-whitespace ASCII control chars, so
+#: ``str.split()`` keeps a whole token intact through whitespace normalization.
+IMG_TOKEN_DELIM = "\x00"
+IMG_TOKEN_FIELD = "\x01"
+IMG_TOKEN_SPACE = "\x02"
+
+#: Matches one whole IMG token, capturing ``(href, alt, size, float, extra)``. converter uses it
+#: to strip tokens (the capture groups are ignored by ``.sub``);
+#: native_generator uses the groups to rebuild image chunks.
+IMG_TOKEN_RE = re.compile(
+    r"\x00IMG\x01([^\x01]*)\x01([^\x00\x01]*)(?:\x01([^\x00\x01]*))?"
+    r"(?:\x01([^\x00\x01]*))?(?:\x01([^\x00]*))?\x00"
+)
