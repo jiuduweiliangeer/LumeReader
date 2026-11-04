@@ -8,7 +8,7 @@ Windows 电子书转换与 Kindle 书架管理工具，使用 Python / PyQt6 开
 
 ![书籍工作台](docs/images/workspace.png)
 
-## 安装后可以直接做什么
+## 安装与功能介绍
 
 - Windows 10 / 11，64 位。下载 Release 中的 `LumeReader-1.0.0-Setup-x64.exe` 并运行。
 - 安装包已包含 Python、PyQt6 和转换所需的开源组件，**不用安装 Python、Calibre 或 Calibre 插件**。
@@ -106,7 +106,7 @@ KPW6 默认预设：首行缩进 2 字、行距 1.65、段后距 0.35em，参数
 - Kindle Previewer 已核对代表性 EPUB 的封面、目录跳转、标题和正文；并非所有格式均逐页人工检查。
 - 部分 AZW3 被 Previewer 以旧版 KindleGen / 第三方文件为由拒绝直接预览；回读 EPUB 不能等同于 AZW3 直接预览。
 - 不处理 DRM，不含 OCR，不承诺复杂公式、固定版式及扫描 PDF 的无损重排。
-- [验证说明](docs/VALIDATION.md) 提供本机耗时；未与 Calibre 做同条件性能对照。
+- [验证说明](docs/VALIDATION.md) 提供本机耗时。
 
 ## 源码运行与构建
 
