@@ -1,5 +1,5 @@
-﻿#ifndef AppVersion
-#define AppVersion "1.1.1"
+#ifndef AppVersion
+#define AppVersion "1.1.0"
 #endif
 #define AppName "轻阅 Lume Reader"
 #ifndef SourceDir

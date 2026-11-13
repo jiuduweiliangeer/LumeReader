@@ -20,11 +20,11 @@ Local adaptations:
 
 Python/Qt dependencies are listed with versions in requirements.txt; their installed distribution metadata retains their individual licenses. PyQt6 / Qt, PyMuPDF, fontTools, ReportLab, Pillow, lxml, cssselect2, tinycss2, BeautifulSoup and comtypes are third-party packages.
 
-Amazon KindleGen is optional in standard public builds and is not committed to this source repository. An explicit local integrated build can include a locally supplied copy, unchanged, with a hash manifest and separate notice. It remains subject to Amazon terms; no redistribution rights are granted by this project.
+The Windows installer includes an unmodified Amazon KindleGen 2.9 executable for AZW3 / MOBI conversion, with a SHA-256 manifest and separate notice in `_internal/tools/`. KindleGen remains Amazon software under its own terms and is not covered by the project AGPL license. The executable is not committed to this source repository.
 
 ## Windows release
 
-Exact versions, source retrieval links and retained licenses: [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md). Application source is published with each release. Original SVG/PNG/ICO artwork uses AGPL-3.0-only. Private user fonts, novels, device data and KindleGen are not redistributed. The three explicitly licensed bundled fonts are listed below.
+Exact versions, source retrieval links and retained licenses: [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md). Application source is published with each release. Original SVG/PNG/ICO artwork uses AGPL-3.0-only. Private user fonts, novels and device data are not redistributed. The three explicitly licensed bundled fonts are listed below.
 
 Release compatibility adaptation: deferred type annotation evaluation in bundled formula helpers for Python 3.9. Original headers and licenses retained. Files: vendor/kfxgen/vendor/latex2mathml/symbols_parser.py.
 

@@ -1,2 +1,2 @@
 """轻阅 Lume — local ebook conversion and Kindle library management."""
-__version__ = '1.1.1'
+__version__ = '1.1.0'

@@ -4,9 +4,9 @@
 
 安装 Windows x64 版本后，从开始菜单或桌面快捷方式启动“轻阅 Lume Reader”，无需 Python 环境。内置转换可离线执行。
 
-额外依赖按 [README 格式表](../README.md#格式与额外依赖) 判断。导出 MOBI / AZW3 使用 KindleGen：本地集成版已包含组件，可直接转换；标准版需要另行提供。导入它们并转成 KFX / EPUB 等不需要。
+安装包已内置 KindleGen，MOBI / AZW3 可直接转换，无需额外安装或配置。各格式能力见 [README 格式表](../README.md#格式与额外依赖)。
 
-[Amazon Kindle Previewer 官方页面](https://kdp.amazon.com/en_US/help/topic/G202131170) 提供桌面预览软件下载。部分发行版附带 `lib\fc\bin\kindlegen.exe`，新版内容可能变化。本软件也支持手动配置已安装的 KindleGen 或设置 `KINDLEGEN` 环境变量。
+[Amazon Kindle Previewer 官方页面](https://kdp.amazon.com/en_US/help/topic/G202131170) 提供桌面预览软件下载。本软件转换 AZW3 / MOBI 不需要安装 Previewer。需要替换编译器时，可在“设置 → 自定义编译器（可选）”指定已有的 kindlegen.exe。
 
 ## 批量操作
 
@@ -36,7 +36,7 @@
 
 ### Voyage / 旧款 KFX 书架封面
 
-连接 Voyage 后使用“转换并发送”，默认自动模式会选择旧款兼容格式并发送缩略图。仅转换时，在“设置 → KFX 封面兼容”选择“旧款 Kindle / Voyage”，转换后用软件发送。
+连接 Voyage 后推荐选择 AZW3，再点击“转换并发送”。如需使用 KFX，可手动切换格式；自动模式会选择旧款封面兼容方式并发送缩略图。仅转换 KFX 时，在“设置 → KFX 封面兼容”选择“旧款 Kindle / Voyage”，转换后用软件发送。
 
 旧版生成的 KFX 也可以重新导入，再转换为 KFX。若封面联网后消失，重连数据线并点击“刷新书架”。这只会恢复本软件发送过且书籍仍在设备上的封面；具体限制见 [Voyage 封面说明](VOYAGE_COVERS.md)。
 
@@ -50,7 +50,7 @@
 
 | 现象 | 检查 |
 |---|---|
-| MOBI / AZW3 输出缺少编译器 | 集成版可重新安装恢复内置组件；标准版配置真实存在的 kindlegen.exe；其他输出不受影响 |
+| MOBI / AZW3 输出缺少编译器 | 重新安装恢复内置组件，或在设置中指定真实存在的 kindlegen.exe；其他输出不受影响 |
 | Kindle 未出现 | 检查数据线、解锁状态，手动刷新 |
 | 字体未生效 | 格式是否支持、是否选择出版商字体、字体是否缺字 |
 | 扫描 PDF 无可编辑文字 | 扫描页作为图片保留，没有 OCR |

@@ -1,6 +1,6 @@
 # 依赖、源码与许可证
 
-Windows 安装包包含下列组件的运行文件，保留各自许可证。项目原创代码采用 AGPL-3.0-only。许可副本随安装包保存在 licenses 目录。
+Windows 安装包包含下列组件的运行文件，保留各自许可证。项目原创代码采用 AGPL-3.0-only。开源组件许可副本保存在 licenses 目录；KindleGen 的独立声明位于 `_internal/tools/KindleGen-NOTICE.txt`。
 
 | 组件 | 构建版本 | 授权记录 | 发行与源码 |
 |---|---|---|---|
@@ -39,7 +39,7 @@ PyInstaller bootloader 使用 GPLv2-or-later 及 bootloader exception；例外�
 
 vendor/ 内 KindleUnpack、kfxgen、kfxlib、公式组件和字体数据保留上游声明，源码随仓库提供。修订及修改点见 [THIRD_PARTY.md](../THIRD_PARTY.md)。
 
-Amazon KindleGen 不包含在标准公开安装包内。可在本地集成构建中使用已有副本，随包保留组件说明与哈希清单；其授权独立于项目 AGPL，不属于仓库源码。详见 [本地集成构建](BUILD.md#本地集成-kindlegen)。
+Amazon KindleGen 2.9 已包含在 Windows 安装包内，用于生成 AZW3 / MOBI。保留原始 EXE、SHA-256 清单及独立声明，位于 `_internal/tools/`；其授权独立于项目 AGPL，EXE 不属于仓库源码。构建方式见 [BUILD.md](BUILD.md)。
 
 每个 Release 的 tag 与源码压缩包对应其二进制版本，packaging/ 提供构建脚本。源代码、许可和依赖信息应随再发布版本提供。
 

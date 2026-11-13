@@ -36,12 +36,11 @@ $OutputBase = "LumeReader-$LumeVersion-Setup-x64"
 $PreviousBundle = $env:LUME_BUNDLE_KINDLEGEN
 try {
     $env:LUME_BUNDLE_KINDLEGEN = $null
-    if ($KindleGen) {
-        $Compiler = Get-Item -LiteralPath $KindleGen
-        if ($Compiler.PSIsContainer -or $Compiler.Name -ne 'kindlegen.exe') { throw 'Pass the kindlegen.exe file.' }
-        $env:LUME_BUNDLE_KINDLEGEN = $Compiler.FullName
-        $OutputBase = "LumeReader-$LumeVersion-Integrated-Setup-x64"
-    }
+    if (-not $KindleGen) { $KindleGen = Join-Path $LumeRoot 'tools\kindlegen.exe' }
+    if (-not (Test-Path -LiteralPath $KindleGen -PathType Leaf)) { throw 'KindleGen is required for the installer; pass -KindleGen or place it in tools.' }
+    $Compiler = Get-Item -LiteralPath $KindleGen
+    if ($Compiler.Name -ne 'kindlegen.exe') { throw 'Pass the kindlegen.exe file.' }
+    $env:LUME_BUNDLE_KINDLEGEN = $Compiler.FullName
     & $Python -m PyInstaller --noconfirm --distpath $DistPath --workpath $WorkPath (Join-Path $PSScriptRoot 'LumeReader.spec')
     if ($LASTEXITCODE -ne 0) { throw 'EXE build failed.' }
     & $ISCC "/DAppVersion=$LumeVersion" "/DSourceDir=$(Join-Path $DistPath 'LumeReader')" "/DOutputBaseName=$OutputBase" (Join-Path $PSScriptRoot 'LumeReader.iss')

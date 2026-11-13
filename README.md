@@ -6,10 +6,6 @@ Windows 电子书转换与 Kindle 书架管理工具，使用 Python / PyQt6 开
 
 [下载 Windows 安装包](https://github.com/jiuduweiliangeer/LumeReader/releases/latest) · [完整使用说明](docs/USAGE.md) · [构建安装包](docs/BUILD.md) · [开源协议](LICENSE.md)
 
-## 本地集成构建 1.1.1
-
-本地集成安装包已包含 KindleGen，**AZW3 / MOBI 无需额外安装或手动配置**。设置页显示组件状态；旧外部路径失效时自动使用内置组件。连接 Voyage 后可直接推荐 AZW3。集成安装包仅在本地生成，公开 Release v1.1.0 仍按下方依赖表使用。[构建方式](docs/BUILD.md#本地集成-kindlegen)。
-
 ## v1.1.0 更新：新增与修复
 
 1. **兼容与界面修复**：增加 Voyage 等旧款 Kindle 的 KFX 书架封面兼容与封面缓存恢复；修复帮助页中文正文丢失、Markdown 表格和图片显示；主导航可收起为图标栏，并记住展开状态。
@@ -17,24 +13,27 @@ Windows 电子书转换与 Kindle 书架管理工具，使用 Python / PyQt6 开
 3. **设备预设与格式推荐**：提供七种阅读预设，连接 Kindle 后在转换前显示推荐格式与原因，特殊机型自动切换，也可手动指定型号和格式。内置霞鹜文楷、汇文明朝、悠哉字体，保留自备字体入口。
 4. **摘抄管理与导出**：读取或导入 My Clippings.txt，按书籍分类查看划线、笔记和书签，使用窄书名列表与宽阅读区，支持搜索、分页与重复导入去重；检测本机笔记软件，按目标自动转换并导入或打开文件导入流程，也可保存为 ENEX / Markdown。[查看摘抄界面示例](docs/images/clippings.png)。
 
-验证：108 项自动测试通过，独立 EXE 完成 56 次格式转换（其中 49 次为非 TXT 输入互转）；ENEX / ENML 通过官方 DTD 校验。Voyage 真机书架显示仍需设备复核，旧 PDOC KFX 请重新转换并发送。详见 [更新记录](docs/CHANGELOG.md) 和 [Voyage 封面说明](docs/VOYAGE_COVERS.md)。
+5. **内置 KindleGen**：安装包已集成 AZW3 / MOBI 转换组件，无需额外安装或手动配置；旧编译器路径失效时自动使用内置组件。
+6. **Voyage 推荐 AZW3**：连接 Kindle Voyage 后自动推荐 AZW3，仍可手动切换其他格式。
+
+完整变更见 [更新记录](docs/CHANGELOG.md)。
 
 ![书籍工作台](docs/images/workspace.png)
 
 ## 安装与功能介绍
 
 - Windows 10 / 11，64 位。下载 Release 中的 `LumeReader-1.1.0-Setup-x64.exe` 并运行。
-- 安装包已包含 Python、PyQt6 和转换所需的开源组件，**不用安装 Python、Calibre 或 Calibre 插件**。
+- 安装包已包含 Python、PyQt6、KindleGen 和转换所需组件，**不用额外安装 Python、Calibre、KindleGen 或 Calibre 插件**。
 - **TXT、EPUB、KFX、PDF、HTML、FB2 之间互转，安装本软件即可使用。**
 - **MOBI / AZW / AZW3 导入后转为上述六种格式，也不需要 KindleGen。**
-- **只有导出 MOBI / AZW3 需要额外提供 KindleGen**，详见下面的表格和官方下载链接。
+- **AZW3 / MOBI 转换使用已内置的 KindleGen，安装软件即可使用。**
 - Kindle Previewer 是可选的桌面预览工具；KFX 转换本身不依赖它。
 
 当前安装包未做代码签名。Release 同时提供 `SHA256SUMS-1.1.0.txt`，可使用 PowerShell 的 `Get-FileHash` 核对文件。
 
 ## 格式与额外依赖
 
-“直接使用”指已经安装 Lume Reader。转换依赖由**目标格式**决定；原文件必须未加密、内容完整。
+“直接使用”指已经安装 Lume Reader。下表支持的转换均可直接使用；原文件必须未加密、内容完整。
 
 | 格式 | 导入本格式 | 导出为此格式 | 额外安装 | 主要限制 |
 |---|---|---|---|---|
@@ -44,24 +43,24 @@ Windows 电子书转换与 Kindle 书架管理工具，使用 Python / PyQt6 开
 | PDF | 直接使用 | 直接使用 | 无 | 文本可重排；扫描页保留为图片，无 OCR；输出包含目录书签 |
 | HTML / HTM | 直接使用 | 直接使用，输出 HTML | 无 | 单文件输出内嵌图片与字体 |
 | FB2 | 直接使用 | 直接使用 | 无 | 支持章节与图片；字体、行距受格式及阅读器限制 |
-| MOBI | 直接使用 | **需要 KindleGen** | 仅导出需要外部编译器 | 输出 MOBI7 + KF8；旧 MOBI7 不支持嵌入字体 |
-| AZW3 | 直接使用 | **需要 KindleGen** | 仅导出需要外部编译器 | KF8 格式，支持封面、目录及出版商字体 |
+| MOBI | 直接使用 | 直接使用，已内置 KindleGen | 无 | 输出 MOBI7 + KF8；旧 MOBI7 不支持嵌入字体 |
+| AZW3 | 直接使用 | 直接使用，已内置 KindleGen | 无 | KF8 格式，支持封面、目录及出版商字体 |
 | AZW | 直接使用（MOBI/KF8 类型） | 不导出 AZW | 无 | 可转其他目标格式；并非所有 .azw 都是同一种容器 |
 | KFX-ZIP / KPF | 直接使用 | 不导出 | 无 | 只读取可解析且完整的未加密内容 |
 | DOCX | 直接使用 | 不导出 | 无 | 导入正文、标题和图片，复杂表格会简化 |
 | Markdown / MD | 直接使用 | 不导出 | 无 | 导入文字与章节标题 |
 
-例如：`MOBI → KFX`、`AZW3 → EPUB`、`EPUB → PDF`、`PDF → EPUB` 均可直接转换；`EPUB → AZW3`、`KFX → MOBI` 才需要 KindleGen。支持格式不代表复杂版式可以无损互转。
+例如：`MOBI → KFX`、`AZW3 → EPUB`、`EPUB → PDF`、`PDF → EPUB`、`EPUB → AZW3`、`KFX → MOBI` 均可直接转换，无需额外安装转换组件。支持格式不代表复杂版式可以无损互转。
 
 ### 可选软件与官方下载链接
 
 | 软件 / 文件 | 哪些情况需要 | 官方来源 | 配置方式 |
 |---|---|---|---|
-| Amazon KindleGen (`kindlegen.exe`) | **导出 MOBI / AZW3 必需**；其他目标格式不需要 | Amazon 已将工作流转向 [Kindle Previewer 官方页面](https://kdp.amazon.com/en_US/help/topic/G202131170)；本机验证使用 Previewer 3 发行版附带的 KindleGen | 自动查找常见位置；也可在“设置与帮助 → MOBI / AZW3 编译器”选择该文件 |
+| Amazon KindleGen (`kindlegen.exe`) | **已内置**，用于导出 MOBI / AZW3 | [Amazon Kindle 工具说明](https://kdp.amazon.com/en_US/help/topic/G202131170) | 自动使用内置组件；“设置 → 自定义编译器（可选）”可指定其他副本 |
 | Amazon Kindle Previewer | 可选，用于电脑上检查 EPUB 排版 | [Amazon 官方下载与说明](https://kdp.amazon.com/en_US/help/topic/G202131170) | 安装后用它打开生成的 EPUB；并非 KFX 转换依赖 |
 | TTF / OTF 字体 | 可选，内置字体之外希望自行选用时 | 使用自己有权使用的字体，例如 [霞鹜文楷官方项目](https://github.com/lxgw/LxgwWenKai) | 在阅读样式中选择字体，或设置字体文件夹 |
 
-**KindleGen 与 Kindle Previewer 不是同一个依赖。** Amazon 后续发行版可能调整内置文件，不能保证最新 Previewer 一定带有 `kindlegen.exe`。软件实际检测的是该编译器；如果安装后没有它，EPUB / KFX / PDF 等仍可直接转换。本项目不捆绑 KindleGen，也不提供第三方修改版编译器。
+**KindleGen 已随安装包集成，Kindle Previewer 是可选的预览软件。** 转换 AZW3 / MOBI 不需要另行安装 Previewer。KindleGen 保留 Amazon 原始程序与独立授权声明，详见 [依赖说明](docs/DEPENDENCIES.md)。
 
 ## 使用流程
 
@@ -85,9 +84,9 @@ Windows 电子书转换与 Kindle 书架管理工具，使用 Python / PyQt6 开
 | 设备 | 默认推荐 | 说明 |
 |---|---|---|
 | Paperwhite、Oasis、Scribe、较新的入门 Kindle | KFX | USB 盘符同步旧款书架缩略图，MTP 使用个人文档模式 |
-| Voyage | 已配置 KindleGen 时 AZW3，否则 KFX 旧款封面兼容模式 | KFX 需要通过软件发送来同步独立缩略图 |
-| Paperwhite 1、Kindle 3 / 4 / Touch | AZW3；无 KindleGen 时 PDF | 不推荐 KFX |
-| Kindle 1 / 2 / DX | MOBI；无 KindleGen 时 PDF | 不使用 KFX 或 AZW3 |
+| Voyage | **AZW3** | 推荐用于 Voyage；内置 KindleGen 可直接转换，也可手动选择 KFX 旧款兼容模式 |
+| Paperwhite 1、Kindle 3 / 4 / Touch | AZW3 | 不推荐 KFX |
+| Kindle 1 / 2 / DX | MOBI | 不使用 KFX 或 AZW3 |
 
 阅读预设包含 **Paperwhite 6、Voyage、6 英寸入门版、Paperwhite 5、Oasis、Scribe 10.2 / 11 英寸**。可自由调整行距、段距、缩进和字号；PDF 页面尺寸跟随预设。切换预设保留已选字体和封面。
 
@@ -157,13 +156,9 @@ KPW6 默认预设：首行缩进 2 字、行距 1.65、段后距 0.35em，参数
 
 截图使用自编示例内容与模拟设备列表，不包含真实设备书库、私人字体或测试小说。
 
-## 验证与限制
+## 格式限制
 
-- 开发阶段通过 45 项自动测试和 54 组跨格式转换检查；独立 EXE 另通过 56 次转换验证，其中 49 组使用 EPUB、MOBI、AZW3、KFX、PDF、HTML、FB2 等非 TXT 输入。
-- Kindle Previewer 已核对代表性 EPUB 的封面、目录跳转、标题和正文；并非所有格式均逐页人工检查。
-- 部分 AZW3 被 Previewer 以旧版 KindleGen / 第三方文件为由拒绝直接预览；回读 EPUB 不能等同于 AZW3 直接预览。
-- 不处理 DRM，不含 OCR，不承诺复杂公式、固定版式及扫描 PDF 的无损重排。
-- [验证说明](docs/VALIDATION.md) 提供本机耗时。
+不处理 DRM，不含 OCR。复杂公式、固定版式和扫描 PDF 的重排效果受源文件结构及目标格式影响。
 
 ## 源码运行与构建
 
