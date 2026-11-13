@@ -61,7 +61,8 @@ def test_batch_per_book_covers_are_distinct_and_direct_send_unchanged(window,tmp
         book=tmp_path/f'{i}.txt';book.write_text('第一章\n正文。',encoding='utf-8');books.append(str(book))
         cover=tmp_path/f'{i}.png';Image.new('RGB',(30,40),('red','blue')[i]).save(cover);covers.append(str(cover))
     window.add_files(books)
-    window.individual_covers.blockSignals(True);window.individual_covers.setChecked(True);window.individual_covers.blockSignals(False)
+    monkeypatch.setattr(window,'choose_batch_cover_mode',lambda count:'individual')
+    monkeypatch.setattr(window,'edit_cover_choices',lambda books:True)
     window.book_covers=dict(zip(books,covers))
     window.output_format.setCurrentIndex(window.output_format.findData('epub'))
     jobs=[];monkeypatch.setattr(window.runner,'start',lambda value:jobs.extend(value))
@@ -161,3 +162,18 @@ def test_note_target_picker_imports_selected_vault(window,app,tmp_path,monkeypat
         app.processEvents();time.sleep(.005);assert time.monotonic()<limit
     assert '已导入' in dialog.receipt and len(list(vault.rglob('*.md')))==1
     assert dialog.result()==QDialog.DialogCode.Accepted
+@pytest.mark.parametrize('count,choice,expected',[(2,'shared',2),(2,None,0),(1,'unused',1)])
+def test_cover_question_only_occurs_on_batch_conversion(window,tmp_path,monkeypatch,count,choice,expected):
+    paths=[]
+    for i in range(count):
+        p=tmp_path/f'book{i}.txt';p.write_text('第一章\n正文。',encoding='utf-8');paths.append(str(p))
+    calls=[]
+    monkeypatch.setattr(window,'choose_batch_cover_mode',lambda n:calls.append(n) or choice)
+    window.add_files(paths)
+    assert calls==[] and not hasattr(window,'individual_covers')
+    window.output_format.setCurrentIndex(window.output_format.findData('epub'))
+    jobs=[];monkeypatch.setattr(window.runner,'start',lambda value:jobs.extend(value))
+    window.start_conversion()
+    assert calls==([2] if count==2 else [])
+    assert len(jobs)==expected and len(window.sources)==count
+    assert all(Path(p).is_file() for p in paths)

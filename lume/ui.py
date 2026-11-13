@@ -29,6 +29,7 @@ class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
         self.history=load_json('history.json',[])
         self.sources=[]
         self.book_covers={}
+        self._individual_covers=False
         self.tasks=[]
         self.font_id=-1
         self.runner=QueueRunner(self)
@@ -114,9 +115,6 @@ class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
         self.clear_button=button('清空',self.clear_queue,'Quiet')
         head.addWidget(self.clear_button)
         q.addLayout(head)
-        self.individual_covers=QCheckBox('为每本书单独设置封面')
-        self.individual_covers.setChecked(self.config.get('individual_covers',False))
-        q.addWidget(self.individual_covers)
         self.queue=table(['书籍','格式','大小','状态'])
         self.queue.setMinimumHeight(130)
         self.queue.itemSelectionChanged.connect(self.select_preview)
@@ -244,10 +242,6 @@ class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
         cw=QWidget()
         cl=QVBoxLayout(cw)
         cl.setContentsMargins(0,14,0,0)
-        self.cover_edit_button=button('逐本设置选中书籍的封面…',self.edit_cover_choices,'Primary')
-        self.cover_edit_button.setEnabled(self.individual_covers.isChecked())
-        cl.addWidget(self.cover_edit_button)
-        self.individual_covers.toggled.connect(self.individual_covers_changed)
         self.cover_preview=QLabel('保留原书封面')
         self.cover_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.cover_preview.setMinimumHeight(300)
@@ -259,7 +253,7 @@ class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
         cl.addWidget(self.cover_path)
         cl.addWidget(button('选择封面图片…',self.choose_cover,'Primary'))
         cl.addWidget(button('清除选择 · 保留原书封面',lambda:self.set_cover(''),'Quiet'))
-        cl.addWidget(label('上方图片为统一封面。勾选“为每本书单独设置封面”后，改用逐本选择；直接发送保留原文件。','Muted',True))
+        cl.addWidget(label('单本转换使用当前封面；批量转换时可选择逐本设置。直接发送保留原文件。','Muted',True))
         cover_scroll=QScrollArea()
         cover_scroll.setWidgetResizable(True)
         cover_scroll.setWidget(cw)
@@ -406,7 +400,7 @@ class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
         data.update({key:spin.value() for key,spin in self.spins.items()})
         data.update(indent_mode=self.indent_mode.currentData(),alignment=self.alignment.currentData(),
                     font_path=self.font_combo.currentData() or '',subset_font=self.subset.isChecked(),
-                    cover_path='' if self.individual_covers.isChecked() else self.cover_path.text(),
+                    cover_path='' if self._individual_covers else self.cover_path.text(),
                     screen_profile=self.preset_combo.currentData() or 'paperwhite6')
         from .fonts import allow_subset
         data['subset_font']=data['subset_font'] and allow_subset(data['font_path'])
@@ -508,7 +502,6 @@ class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
             else: expanded.append(value)
         paths=expanded
         rejected=[]
-        added=[]
         existing={value.casefold() for value in self.sources}
         for value in paths:
             path=Path(value)
@@ -519,7 +512,6 @@ class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
             if full.casefold() in existing: continue
             existing.add(full.casefold())
             self.sources.append(full)
-            added.append(full)
             row=self.queue.rowCount()
             self.queue.insertRow(row)
             for col,text in enumerate((path.stem,path.suffix[1:].upper(),format_size(path.stat().st_size),'待转换')):
@@ -532,7 +524,6 @@ class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
         self.empty.setVisible(not self.sources)
         if self.sources and self.queue.currentRow()<0: self.queue.selectRow(0)
         self.update_actions()
-        if added and self.individual_covers.isChecked():self.edit_cover_choices(added)
         if rejected: QMessageBox.information(self,'未添加的文件','格式不受支持：\n'+'\n'.join(rejected[:10]))
 
     def queue_checks_changed(self):
@@ -603,7 +594,8 @@ class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
             layout.validate()
             self.config.update(layout=layout.to_dict(),output=self.output_path.text().strip() or str(ROOT/'output'),
                                kindlegen=self.kindlegen.text().strip(),font_dir=self.font_dir.text().strip(),
-                               format=self.output_format.currentData(),individual_covers=self.individual_covers.isChecked())
+                               format=self.output_format.currentData())
+            self.config.pop('individual_covers',None)
             self.config['layout']['cover_path']=self.cover_path.text()
             save_json('settings.json',self.config)
             if notify:
@@ -647,7 +639,7 @@ class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
         self.runner.start(jobs)
 
     def start_conversion(self,send=False):
-        if self._batch_busy or not self.sources or not self.save_settings(notify=False): return
+        if self._batch_busy or not self.sources: return
         device=self.current_device()
         if send:
             from .devices import USB_FORMATS
@@ -655,9 +647,16 @@ class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
             if '.'+self.output_format.currentData() not in USB_FORMATS: return
         self._batch_rows=self.queue.checked_rows()
         if not self._batch_rows: return
-        if self.individual_covers.isChecked():
-            pending=[self.sources[r] for r in self._batch_rows if self.sources[r] not in self.book_covers]
-            if pending and not self.edit_cover_choices(pending):return
+        self._individual_covers=False
+        if len(self._batch_rows)>1 and self.output_format.currentData()!='txt':
+            choice=self.choose_batch_cover_mode(len(self._batch_rows))
+            if choice is None:return
+            if choice=='individual':
+                self._individual_covers=True
+                if not self.edit_cover_choices([self.sources[r] for r in self._batch_rows]):
+                    self._individual_covers=False
+                    return
+        if not self.save_settings(notify=False):return
         try:
             layouts={r:self.layout_for_source(self.sources[r]) for r in self._batch_rows}
         except Exception as exc:
@@ -683,8 +682,6 @@ class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
         for b in (self.add_button,self.remove_button,self.clear_button): b.setEnabled(not value)
         self.cancel_button.setEnabled(value)
         self.output_format.setEnabled(not value)
-        self.individual_covers.setEnabled(not value)
-        self.cover_edit_button.setEnabled(not value and self.individual_covers.isChecked())
         self.preset_combo.setEnabled(not value)
         self.update_actions()
 
@@ -737,6 +734,7 @@ class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
         self.queue.item(row,3).setForeground(QColor('#ad6a55'))
 
     def batch_finished(self,cancelled):
+        self._individual_covers=False
         self.busy(False)
         self.apply_recommendation()
         converted=sum(r.get('operation')!='send' for r in self._batch_results.values())

@@ -1,7 +1,7 @@
 """Device recommendations, reading presets and per-book cover controls."""
 from dataclasses import replace
 from pathlib import Path
-from PyQt6.QtWidgets import QDialog
+from PyQt6.QtWidgets import QDialog,QMessageBox
 from .presets import PRESETS,MODEL_NAMES,preset_values,recommend
 from .device_library import device_key
 
@@ -83,13 +83,23 @@ class UpgradeControls:
                 self.queue.item(row,3).setText('已选封面' if cover else '保留原封面')
         return True
 
-    def individual_covers_changed(self,checked):
-        self.cover_edit_button.setEnabled(checked and not self._batch_busy)
-        if checked and self.sources:self.edit_cover_choices()
+    def choose_batch_cover_mode(self,count):
+        dialog=QMessageBox(self)
+        dialog.setWindowTitle('本批书籍的封面')
+        dialog.setText(f'本次转换 {count} 本书，是否为每本书单独设置封面？')
+        dialog.setInformativeText('逐本设置可以分别选图或保留原封面。使用当前设置会应用封面页中的选择。')
+        individual=dialog.addButton('逐本设置封面',QMessageBox.ButtonRole.AcceptRole)
+        shared=dialog.addButton('使用当前封面设置',QMessageBox.ButtonRole.NoRole)
+        dialog.addButton('取消',QMessageBox.ButtonRole.RejectRole)
+        dialog.setDefaultButton(shared)
+        dialog.exec()
+        if dialog.clickedButton()==individual:return 'individual'
+        if dialog.clickedButton()==shared:return 'shared'
+        return None
 
     def layout_for_source(self,path):
         layout=self.layout_options()
-        if self.individual_covers.isChecked():layout.cover_path=self.book_covers.get(path,'')
+        if self._individual_covers:layout.cover_path=self.book_covers.get(path,'')
         device=self.current_device()
         if layout.kfx_mode=='auto' and device:
             rec=getattr(self,'recommendation',recommend(device))
