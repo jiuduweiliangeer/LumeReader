@@ -68,3 +68,18 @@
 - “摘抄”页从 Kindle 读取或导入 My Clippings.txt，重复记录去重，按书籍查看；100 条一页，支持搜索、类型筛选和 ENEX / Markdown 导出。
 - ENEX 为印象笔记 / Evernote 文件导入格式，每本书一条笔记；导出当前书籍时包含该书全部摘抄，不受搜索或类型筛选影响。
 - 选择内置字体即可嵌入；其他字体可放入自定义字体文件夹。详见 [字体说明](FONTS.md)。
+
+
+## 摘抄布局与导入笔记软件
+
+- 左下角按钮可收起或展开主导航，状态自动保存。书籍列表保持窄栏，只显示书名；完整书名、作者和条数可悬停查看。
+- 选择书名后，主栏显示该书的划线、笔记和书签。底部范围控件与操作按钮居中。
+- 点击“导入笔记软件”，自动检测本机适配的应用；可以选择当前书籍或全部书籍。
+- Obsidian：选择自动发现或手动指定的现有笔记库，直接写入逐本 Markdown；原笔记不覆盖。
+- Logseq：选择文件图谱目录，将逐本 Markdown 写入 pages。数据库图谱需通过文件导入。
+- Joplin：在“工具 → 选项 → Web Clipper”启用内置服务，点击导入后在 Joplin 允许请求，软件自动创建笔记本和笔记。授权仅在本次操作的内存中使用，不保存令牌。
+- Evernote / 印象笔记：转换为 ENEX 后，若系统关联匹配所选软件则调用该关联打开；否则打开软件和文件夹，按“文件 → 导入”完成。Lume 不把打开程序等同于导入已完成。
+- Notion：生成 Markdown ZIP 并打开软件与文件夹，在其“导入”中选择文件。
+- “保存为文件”保留 ENEX / Markdown 通用导出，不必安装笔记软件。
+
+接口依据：[Obsidian URI](https://help.obsidian.md/Extending+Obsidian/Obsidian+URI)、[Joplin Data API](https://joplinapp.org/help/api/references/rest_api/)、[Joplin 授权机制](https://joplinapp.org/help/dev/spec/clipper_auth/)、[Evernote 官方导入说明](https://help.evernote.com/hc/en-us/articles/360035153274-How-To-Import-Notes-and-Notebooks)。

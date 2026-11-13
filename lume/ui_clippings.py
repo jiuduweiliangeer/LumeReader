@@ -3,7 +3,7 @@ from html import escape
 from pathlib import Path
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (QWidget,QVBoxLayout,QHBoxLayout,QLineEdit,QListWidget,QListWidgetItem,
-                            QComboBox,QSplitter,QMessageBox)
+                            QComboBox,QSplitter,QMessageBox,QMenu)
 from .ui_parts import label,button,card
 from .ui_theme import FileDialogs
 from .help_view import DocumentBrowser
@@ -35,20 +35,23 @@ class ClippingsPanel(QWidget):
         header.addLayout(row)
         box.addWidget(panel)
         split=QSplitter(Qt.Orientation.Horizontal)
-        left=QWidget();leftbox=QVBoxLayout(left);leftbox.setContentsMargins(0,0,12,0)
+        self.splitter=split
+        left=QWidget();left.setMinimumWidth(160);left.setMaximumWidth(240);leftbox=QVBoxLayout(left);leftbox.setContentsMargins(0,0,12,0)
         self.search=QLineEdit()
-        self.search.setPlaceholderText('搜索书名、作者或摘抄…')
+        self.search.setPlaceholderText('搜索书籍或摘抄…')
         self.search.setClearButtonEnabled(True)
         leftbox.addWidget(self.search)
         self.books=QListWidget()
-        self.books.setWordWrap(True)
-        self.books.setSpacing(5)
-        self.books.setStyleSheet('QListWidget {border-radius:10px;} QListWidget::item {padding:14px 10px;border-radius:7px;}')
+        self.books.setWordWrap(False)
+        self.books.setTextElideMode(Qt.TextElideMode.ElideRight)
+        self.books.setSpacing(3)
+        self.books.setStyleSheet('QListWidget {border-radius:10px;} QListWidget::item {padding:11px 8px;border-radius:7px;}')
         leftbox.addWidget(self.books,1)
         split.addWidget(left)
         right=QWidget();rightbox=QVBoxLayout(right);rightbox.setContentsMargins(0,0,0,0)
         heading=QHBoxLayout()
         self.book_title=label('选择一本书','Section',True)
+        self.book_title.setStyleSheet('font-size:20px;font-weight:600;color:#2e6148;')
         heading.addWidget(self.book_title,1)
         self.kind=QComboBox()
         for text,value in [('全部摘抄',''),('划线','highlight'),('笔记','note'),('书签','bookmark')]:self.kind.addItem(text,value)
@@ -64,17 +67,28 @@ class ClippingsPanel(QWidget):
         self.next_page=button('下一页',lambda:self.change_page(1),'Quiet')
         pager.addWidget(self.prev_page);pager.addWidget(self.next_page)
         rightbox.addLayout(pager)
-        split.addWidget(right);split.setSizes([280,700]);split.setChildrenCollapsible(False)
+        split.addWidget(right);split.setSizes([200,1100]);split.setStretchFactor(0,0);split.setStretchFactor(1,1);split.setChildrenCollapsible(False)
         box.addWidget(split,1)
         footer=QHBoxLayout()
+        footer.addStretch()
         self.scope=QComboBox()
-        self.scope.addItem('导出当前书籍',False);self.scope.addItem('导出全部书籍',True)
+        self.scope.setEditable(True)
+        self.scope.lineEdit().setReadOnly(True)
+        self.scope.lineEdit().setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.scope.lineEdit().setStyleSheet('border:none;background:transparent;padding:0;')
+        self.scope.setFixedWidth(164)
+        self.scope.addItem('当前书籍',False);self.scope.addItem('全部书籍',True)
+        for i in range(self.scope.count()):self.scope.setItemData(i,Qt.AlignmentFlag.AlignCenter,Qt.ItemDataRole.TextAlignmentRole)
         footer.addWidget(self.scope)
-        self.enex=button('导出到印象笔记 · ENEX',lambda:self.export('enex'),'Primary')
-        self.md=button('导出 Markdown',lambda:self.export('md'))
-        footer.addWidget(self.enex);footer.addWidget(self.md);footer.addStretch()
-        box.addLayout(footer)
-        self.status=label('导出 ENEX 后，可在印象笔记或 Evernote 桌面端导入；Markdown 可用于其他笔记软件。','Muted',True)
+        self.transfer=button('导入笔记软件…',self.transfer_notes,'Primary')
+        self.save_file=button('保存为文件',lambda:None)
+        menu=QMenu(self.save_file)
+        menu.addAction('Markdown · 通用文本',lambda:self.export('md'))
+        menu.addAction('ENEX · 兼容笔记软件',lambda:self.export('enex'))
+        self.save_file.setMenu(menu)
+        footer.addWidget(self.transfer);footer.addWidget(self.save_file);footer.addStretch()
+        rightbox.addLayout(footer)
+        self.status=label('选择笔记软件后自动匹配格式，或将摘抄保存为文件。','Muted',True)
         box.addWidget(self.status)
         self.search.textChanged.connect(self.refresh)
         self.kind.currentIndexChanged.connect(self.display)
@@ -89,7 +103,8 @@ class ClippingsPanel(QWidget):
         for book in grouped:
             if query and not any(query in (c.title+' '+c.author+' '+c.text).casefold() for c in book):continue
             first=book[0]
-            item=QListWidgetItem(first.title+'\n'+(first.author+' · ' if first.author else '')+f'{len(book)} 条摘抄')
+            item=QListWidgetItem(first.title)
+            item.setToolTip(first.title+(' · '+first.author if first.author else '')+f'\n{len(book)} 条摘抄')
             item.setData(Qt.ItemDataRole.UserRole,first.book_id)
             self.books.addItem(item)
             if first.book_id==self.current_book:selected=item
@@ -126,8 +141,8 @@ class ClippingsPanel(QWidget):
         self.prev_page.setEnabled(self.page_index>0);self.next_page.setEnabled(self.page_index+1<pages)
         self.page_label.setText(f'第 {self.page_index+1} / {pages} 页 · 共 {count} 条')
         visible=visible[self.page_index*100:(self.page_index+1)*100]
-        title='<h2 style="color:#2e6148;">'+escape(first.title)+'</h2>'
-        author='<p style="color:#6d7c73;">'+escape(first.author)+f'　·　{count} 条</p>'
+        title=''
+        author='<p style="color:#6d7c73;">'+(escape(first.author)+' · ' if first.author else '')+f'{count} 条摘抄</p>'
         self.reader.setHtml('<html><body style="font-family:Microsoft YaHei UI;font-size:12pt;color:#263b3b;">'+title+author+
                             (notes.notes_html(visible,True) or '<p>没有符合当前筛选条件的摘抄。</p>')+'</body></html>')
 
@@ -136,7 +151,7 @@ class ClippingsPanel(QWidget):
         owner=self.owner
         self.device_import.setEnabled(ready and bool(owner.current_device()) and not owner._device_busy and not owner._batch_busy and not owner._scanning)
         self.local_import.setEnabled(ready)
-        self.enex.setEnabled(ready and bool(self.records));self.md.setEnabled(ready and bool(self.records))
+        self.transfer.setEnabled(ready and bool(self.records));self.save_file.setEnabled(ready and bool(self.records))
 
     def import_local(self):
         path,_=FileDialogs.getOpenFileName(self,'导入 Kindle 摘抄','','Kindle 摘抄 (*.txt)')
@@ -172,13 +187,21 @@ class ClippingsPanel(QWidget):
             QMessageBox.warning(self,'摘抄导入未完成',error)
         self.owner.task(work,done,failed)
 
+    def transfer_notes(self):
+        selected=list(self.records) if self.scope.currentData() else [c for c in self.records if c.book_id==self.current_book]
+        if not selected:return
+        from .ui_note_transfer import NoteTransferDialog
+        dialog=NoteTransferDialog(self.owner,selected)
+        dialog.exec()
+        if dialog.receipt:self.status.setText(dialog.receipt)
+
     def export(self,fmt):
         selected=list(self.records) if self.scope.currentData() else [c for c in self.records if c.book_id==self.current_book]
         if not selected:return
         title='Kindle 摘抄' if self.scope.currentData() else selected[0].title
         import re
         title=re.sub(r'[<>:"/\\|?*\x00-\x1f]','_',title).strip(' .')[:100] or 'Kindle 摘抄'
-        path,_=FileDialogs.getSaveFileName(self,'导出摘抄',title+'.'+fmt,'印象笔记 (*.enex)' if fmt=='enex' else 'Markdown (*.md)')
+        path,_=FileDialogs.getSaveFileName(self,'导出摘抄',title+'.'+fmt,'ENEX 笔记文件 (*.enex)' if fmt=='enex' else 'Markdown (*.md)')
         if not path:return
         if not Path(path).suffix:path+='.'+fmt
         try:

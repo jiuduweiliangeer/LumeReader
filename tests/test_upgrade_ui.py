@@ -131,3 +131,33 @@ def test_clippings_import_runs_in_worker_and_deduplicates(window,app):
     assert len(window.clippings.records)==1 and len(load_library())==1
     window.clippings.import_data(lambda:data,'本地验证');wait()
     assert len(window.clippings.records)==1 and '已存在 1 条' in window.clippings.status.text()
+def test_navigation_collapses_and_clippings_controls_are_compact(window,app):
+    window.resize(1340,900);window.show();window.switch(2);app.processEvents()
+    window.sidebar.set_collapsed(True);app.processEvents()
+    assert window.sidebar.width()==60 and all(b.text()=='' for b in window.nav)
+    assert window.clippings.splitter.widget(0).width()<=240
+    assert window.clippings.scope.lineEdit().alignment() & Qt.AlignmentFlag.AlignHCenter
+    window.sidebar.toggle.click();app.processEvents()
+    assert window.sidebar.width()==152 and window.nav[2].text()=='摘抄'
+    assert not any(b.text().startswith(('01','02','03','04')) for b in window.nav)
+    assert window.config['sidebar_collapsed'] is False
+
+
+def test_note_target_picker_imports_selected_vault(window,app,tmp_path,monkeypatch):
+    import time
+    import lume.ui_note_transfer as ui
+    from lume.note_transfer import NoteTarget
+    from lume.clippings import Clipping
+    vault=tmp_path/'vault';(vault/'.obsidian').mkdir(parents=True)
+    monkeypatch.setattr(ui,'discover_targets',lambda:[NoteTarget('obsidian','Obsidian','vault',detected=True,libraries=[str(vault)])])
+    dialog=ui.NoteTransferDialog(window,[Clipping('书名','','highlight','测试导入正文。','12')])
+    limit=time.monotonic()+10
+    while not dialog.start_button.isEnabled():
+        app.processEvents();time.sleep(.005);assert time.monotonic()<limit
+    dialog.open_target.setChecked(False)
+    assert dialog.destination.currentText()==str(vault)
+    dialog.start()
+    while dialog.running or window.tasks:
+        app.processEvents();time.sleep(.005);assert time.monotonic()<limit
+    assert '已导入' in dialog.receipt and len(list(vault.rglob('*.md')))==1
+    assert dialog.result()==QDialog.DialogCode.Accepted

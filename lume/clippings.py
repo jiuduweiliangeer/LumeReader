@@ -161,7 +161,7 @@ def notes_html(records,styled=False):
         meta=escape(metadata(c))
         if styled:
             # Qt rich text supports table cell padding, but ignores div padding.
-            content.append('<table width="100%" cellspacing="0" cellpadding="16" bgcolor="#f1f7f3">'
+            content.append('<table width="98%" cellspacing="0" cellpadding="16" bgcolor="#f1f7f3">'
                            '<tr><td style="border-left:3px solid #75a087;">'
                            '<p style="margin-top:0;margin-bottom:12px;line-height:150%;">'+body+'</p>'
                            '<p style="color:#61796b;font-size:10pt;margin:0;">'+meta+'</p>'
@@ -181,7 +181,7 @@ def atomic_export(path,data):
     return path
 
 
-def export_markdown(records,path):
+def markdown_text(records):
     blocks=[]
     for book in groups(records):
         first=book[0]
@@ -189,7 +189,11 @@ def export_markdown(records,path):
         for c in book:
             blocks.append('\n'.join('> '+line for line in (c.text or '书签').splitlines()))
             blocks.append('\n\n'+metadata(c)+'\n\n---\n\n')
-    return atomic_export(path,''.join(blocks).encode('utf-8'))
+    return ''.join(blocks)
+
+
+def export_markdown(records,path):
+    return atomic_export(path,markdown_text(records).encode('utf-8'))
 
 
 def export_enex(records,path):
