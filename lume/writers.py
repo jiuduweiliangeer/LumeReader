@@ -277,7 +277,8 @@ def write_pdf(book,path,layout,ctx):
     else:
         pdfmetrics.registerFont(UnicodeCIDFont('STSong-Light'))
         font_name='STSong-Light'
-    width,height=303.36,403.2 # 1264 x 1680 at 300 dpi, in PDF points
+    from .presets import page_size
+    width,height=page_size(layout.screen_profile)
     margin=layout.margin
     base=ParagraphStyle('Body',fontName=font_name,fontSize=size,leading=size*layout.line_height,
                         spaceAfter=size*layout.paragraph_gap,wordWrap='CJK',

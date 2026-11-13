@@ -209,6 +209,10 @@ def write_kfx(book,path,layout,ctx):
     if not faces:
         faces=source_font_faces(book)
     generator=NativeKFXGenerator()
+    # Older USB Kindles need EBOK plus an uploaded library thumbnail.
+    # Modern MTP firmware derives library covers from personal documents.
+    book.device_cdetype='EBOK' if layout.kfx_mode=='legacy' else 'PDOC'
+    generator.lume_cde_content_type=book.device_cdetype
     # KFX line-height uses reader-relative lh, with a 1.2 CSS baseline.
     generator.lume_line_height_base=1.2
     ctx.update(80,'序列化 KFX 与字体资源')

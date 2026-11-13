@@ -46,3 +46,13 @@ Amazon KindleGen 不包含在安装包内，由用户按 Amazon 条款另行安�
 补充解码依赖：pypdf 6.16.1（BSD-3-Clause），[对应源码](https://pypi.org/project/pypdf/6.16.1/#files)，许可见 licenses/pypdf。发布包内 Python 为 3.9.23；MuPDF 运行时为 1.26.10，[对应源码标签](https://github.com/ArtifexSoftware/mupdf/tree/1.26.10)，重建时包含该标签的子模块。
 
 安装器使用 Inno Setup 6.7.3，版权声明见 licenses/Inno-Setup/LICENSE.txt；[上游源码](https://github.com/jrsoftware/issrc/tree/is-6_7_3)。
+
+
+1.1 新增运行依赖：
+
+| 组件 | 版本 | 许可 | 来源 |
+|---|---|---|---|
+| markdown-it-py | 3.0.0 | MIT | https://github.com/executablebooks/markdown-it-py |
+| mdurl | 0.1.2 | MIT | https://github.com/executablebooks/mdurl |
+
+新增内置字体及许可见 [FONTS.md](FONTS.md)，原文件与声明位于 `lume/assets/fonts`。它们与私有用户字体分开管理。

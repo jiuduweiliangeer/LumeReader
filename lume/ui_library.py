@@ -145,6 +145,15 @@ class DeviceWorkspace:
         self.device_combo.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
         self.device_combo.currentIndexChanged.connect(self.device_changed)
         row.addWidget(self.device_combo,1)
+        from .presets import MODEL_NAMES
+        self.device_model=QComboBox()
+        self.device_model.setMinimumWidth(190)
+        self.device_model.setMaximumWidth(260)
+        self.device_model.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        self.device_model.addItem('自动识别型号','')
+        for key,name in MODEL_NAMES.items():self.device_model.addItem(name,key)
+        self.device_model.currentIndexChanged.connect(self.model_changed)
+        row.addWidget(self.device_model)
         self.refresh_button=button('刷新',lambda:self.refresh_devices(force=True),'Quiet')
         row.addWidget(self.refresh_button)
         self.manual_button=button('指定设备目录',self.choose_device,'Quiet')
@@ -176,6 +185,8 @@ class DeviceWorkspace:
         if hasattr(self,'library'):
             self.library.set_busy(self._device_busy or self._scanning or self._batch_busy)
         self.device_combo.setEnabled(not self._device_busy and ready and not self._scanning)
+        self.device_model.setEnabled(connected and ready and not self._device_busy)
+        if hasattr(self,'clippings'):self.clippings.update_actions()
         self.refresh_button.setEnabled(not self._device_busy and ready and not self._scanning)
         self.manual_button.setEnabled(not self._device_busy and ready and not self._scanning)
 
@@ -185,6 +196,7 @@ class DeviceWorkspace:
         self._scanning=True
         self.update_actions()
         previous=device_key(self.current_device())
+        previous_model=getattr(self.current_device(),'model','')
         def done(devices):
             if self._manual_device and Path(self._manual_device.path).is_dir():
                 if device_key(self._manual_device) not in {device_key(d) for d in devices}:
@@ -200,7 +212,7 @@ class DeviceWorkspace:
             self._scanning=False
             current=device_key(self.current_device())
             self.device_status.setText('● Kindle 已连接' if current else '○ Kindle 未连接')
-            if previous!=current or self._library_key!=current or force:
+            if previous!=current or self._library_key!=current or force or previous_model!=getattr(self.current_device(),'model',''):
                 self.device_changed()
                 if force and current==self._library_key: self.refresh_library()
             self.update_actions()
@@ -234,7 +246,7 @@ class DeviceWorkspace:
         self.update_actions()
 
     def refresh_library(self):
-        from .device_library import list_books
+        from .device_library import refresh_books
         device=self.current_device()
         if not device or self._device_busy or self._batch_busy or self._scanning: return
         self._device_busy=True
@@ -244,7 +256,13 @@ class DeviceWorkspace:
             self._device_busy=False
             self._library_key=device_key(device)
             self.library.set_books(snapshot)
-            self.library.message.setText('书架已更新 · 删除前自动备份，保留批注和阅读记录。')
+            message='书架已更新 · 删除前自动备份，保留批注和阅读记录。'
+            covers=snapshot.get('covers',{})
+            if covers.get('restored'):
+                message=f"书架已更新 · 已恢复 {covers['restored']} 张封面，安全弹出 Kindle 后查看。"
+            if covers.get('errors'):
+                message+=' 封面恢复未完成：'+covers['errors'][0]
+            self.library.message.setText(message)
             self.device_status.setText('● Kindle 已连接')
             self.update_actions()
         def failed(message):
@@ -252,7 +270,7 @@ class DeviceWorkspace:
             self._library_key=''
             self.library.message.setText(message)
             self.update_actions()
-        self.task(lambda progress:list_books(device,progress),done,failed,self.library.message.setText)
+        self.task(lambda progress:refresh_books(device,progress),done,failed,self.library.message.setText)
 
     def choose_device(self):
         from .devices import Device

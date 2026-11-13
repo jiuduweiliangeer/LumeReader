@@ -1,0 +1,7 @@
+Huiwen-mincho, modified punctuation edition.
+Copyright/name table declaration: Public Domain
+Original author: 特里王 (Terry Wang)
+Punctuation fixes: bosswnx
+Original publication: https://zhuanlan.zhihu.com/p/344103391
+Modified edition: https://github.com/bosswnx/huiwenmincho-improved
+Font files are provided unchanged; their original metadata is retained.

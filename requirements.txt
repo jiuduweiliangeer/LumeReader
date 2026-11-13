@@ -13,3 +13,5 @@ reportlab==5.0.0
 Pillow==11.3.0
 comtypes==1.4.16; sys_platform == 'win32'
 pypdf==6.16.1
+markdown-it-py==3.0.0
+mdurl==0.1.2

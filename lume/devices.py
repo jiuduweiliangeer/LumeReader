@@ -18,6 +18,13 @@ class Device:
     kind: str
     path: str
     detail: str=''
+    model: str=''
+
+def kfx_mode_for_device(mode,device):
+    """Resolve conversion settings only; direct sends keep the original bytes."""
+    if mode!='auto': return mode
+    return 'legacy' if device.kind=='usb' else 'personal'
+
 
 def scan_devices():
     if os.name!='nt':
@@ -35,11 +42,13 @@ def scan_devices():
         if kernel.GetVolumeInformationW(drive,volume,261,None,None,None,None,0):
             documents=Path(drive)/'documents'
             if 'kindle' in volume.value.casefold() and documents.is_dir():
-                devices.append(Device(volume.value,'usb',str(documents),'USB 磁盘'))
+                from .device_identity import usb_model
+                devices.append(Device(volume.value,'usb',str(documents),'USB 磁盘',usb_model(drive,volume.value)))
     try:
         from .wpd import scan
         for d in scan():
-            devices.append(Device(d['name'],'mtp',json.dumps(d), 'MTP · 已连接'))
+            from .presets import identify_model
+            devices.append(Device(d['name'],'mtp',json.dumps(d), 'MTP · 已连接',identify_model(d['name'],d.get('serial',''))))
     except Exception as exc:
         if not devices:
             raise ConversionError('MTP 检测失败：'+str(exc)) from exc
@@ -98,16 +107,8 @@ def send_file(source,device,progress=None):
                 'sha256':digest(target),'transport':'USB','verified':True}
         if thumbnail:
             try:
-                name,data=thumbnail
-                thumb_dir=folder.parent/'system'/'thumbnails'
-                thumb_dir.mkdir(parents=True,exist_ok=True)
-                thumb_path=thumb_dir/name
-                thumb_tmp=thumb_dir/(name+'.lume-part')
-                thumb_tmp.write_bytes(data)
-                thumb_tmp.replace(thumb_path)
-                if digest(thumb_path)!=hashlib.sha256(data).hexdigest():
-                    raise ConversionError('封面回读校验不一致。')
-                result['cover']={'path':str(thumb_path),'sha256':digest(thumb_path),'verified':True}
+                from .cover_sync import store_usb_cover
+                result['cover']=store_usb_cover(folder,target,thumbnail,result['sha256'])
             except Exception as exc:
                 result['cover_error']=str(exc)
                 record_send(source,device,result)

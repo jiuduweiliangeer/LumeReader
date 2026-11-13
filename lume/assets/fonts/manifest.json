@@ -1,0 +1,61 @@
+[
+  {
+    "file": "LXGWWenKai-Regular.ttf",
+    "license": "OFL-1.1",
+    "source": "https://github.com/lxgw/LxgwWenKai",
+    "sha256": "aa07ed45883ed6121fe1fe01a9c65c4c8ae905a7ead05e111628d70813842c18",
+    "metadata": {
+      "0": [
+        "Copyright 2021 LXGW (https://github.com/lxgw/LxgwWenKai)\r\nCopyright 2020 The Klee Project Authors (https://github.com/fontworks-fonts/Klee)"
+      ],
+      "8": [],
+      "9": [
+        "Fontworks Inc."
+      ],
+      "13": [
+        "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL"
+      ],
+      "14": [
+        "https://scripts.sil.org/OFL"
+      ]
+    }
+  },
+  {
+    "file": "Huiwenmincho-improved.ttf",
+    "license": "Public Domain (font metadata)",
+    "source": "https://github.com/bosswnx/huiwenmincho-improved",
+    "sha256": "90bb5b835fd5841a46fa8fca4fe1c82aeb4b9c02be15eadc3effc60dad4fef58",
+    "metadata": {
+      "0": [
+        "Public Domain"
+      ],
+      "8": [],
+      "9": [],
+      "13": [],
+      "14": []
+    }
+  },
+  {
+    "file": "Yozai-Light.ttf",
+    "license": "OFL-1.1",
+    "source": "https://github.com/lxgw/yozai-font",
+    "sha256": "0efc843308810c04ec394d8af27d0871ada3a9cc4860a226abde88a1bc67b3bd",
+    "metadata": {
+      "0": [
+        "Copyright 2020, 2024 LXGW (https://github.com/lxgw/yozai-font)\r\nOriginal Font Data Copyright (C) Y.OzVox."
+      ],
+      "8": [
+        "LXGW / Y.OzVox"
+      ],
+      "9": [
+        "LXGW / Y.OzVox"
+      ],
+      "13": [
+        "This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://scripts.sil.org/OFL"
+      ],
+      "14": [
+        "https://scripts.sil.org/OFL"
+      ]
+    }
+  }
+]

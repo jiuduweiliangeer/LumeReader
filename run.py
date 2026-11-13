@@ -12,11 +12,13 @@ def main():
     parser=argparse.ArgumentParser(description='轻阅 Lume — independent ebook converter')
     parser.add_argument('--worker',help='JSON job description (internal)')
     parser.add_argument('--convert',metavar='FILE')
-    parser.add_argument('--to',default='epub')
+    parser.add_argument('--to',default='kfx')
     from lume.paths import USER_ROOT
     parser.add_argument('--output',default=str(USER_ROOT/'output'))
     parser.add_argument('--font',default='')
     parser.add_argument('--cover',default='',help='Cover image (JPEG/PNG/WebP)')
+    parser.add_argument('--kfx-mode',choices=('auto','personal','legacy'),default='auto',
+                        help='KFX cover compatibility: legacy for Kindle Voyage / older USB Kindles')
     parser.add_argument('--open',nargs='*',default=[])
     parser.add_argument('--self-check',action='store_true')
     args=parser.parse_args()
@@ -26,7 +28,12 @@ def main():
         from kfxgen.native_generator import NativeKFXGenerator
         import pymupdf, lxml, tinycss2, cssselect2, pypdf, bz2, ctypes
         from lume import __version__
-        from lume.paths import USER_ROOT
+        from lume.help_view import markdown_html
+        from lume.fonts import available_fonts
+        from lume.presets import PRESETS
+        assert '中文帮助' in markdown_html('# 中文帮助')
+        from lume.clippings import export_enex
+        from lume.paths import USER_ROOT,APP_ROOT
         device_count=None
         if sys.platform=='win32':
             from lume.wpd import Session
@@ -34,7 +41,8 @@ def main():
         print(json.dumps({'version':__version__,'python':sys.executable,'python_version':sys.version.split()[0],
                           'qt':qVersion(),'pyqt':PYQT_VERSION_STR,'data_dir':str(USER_ROOT),
                           'kindlegen':find_kindlegen(),'kfx':'native Python','calibre':'not used',
-                          'mtp_devices':device_count},ensure_ascii=False))
+                          'mtp_devices':device_count,'bundled_fonts':len(list(available_fonts(APP_ROOT/'missing-fonts'))),
+                          'reading_presets':len(PRESETS),'clippings_export':['enex','md']},ensure_ascii=False))
         return 0
     if args.worker or args.convert:
         if hasattr(sys.stdout,'reconfigure'):
@@ -48,7 +56,7 @@ def main():
             from lume.engine import convert
             from lume.model import Layout,Context
             job=json.loads(Path(args.worker).read_text(encoding='utf-8')) if args.worker else {
-                'source':args.convert,'output_dir':args.output,'format':args.to,'layout':{'font_path':args.font,'cover_path':args.cover}}
+                'source':args.convert,'output_dir':args.output,'format':args.to,'layout':{'font_path':args.font,'cover_path':args.cover,'kfx_mode':args.kfx_mode}}
             logging.basicConfig(stream=sys.stderr,level=logging.WARNING)
             sending=bool(job.get('send_to'))
             context=Context(lambda p,t:emit('progress',percent=int(p*.85) if sending else p,text=t))
@@ -70,8 +78,12 @@ def main():
                         'device_path':device_path,'operation':'send'}
                 emit('done',result=result)
                 return 0
+            layout=Layout(**job.get('layout',{}))
+            if sending and job['format'].lower().lstrip('.')=='kfx':
+                from lume.devices import Device,kfx_mode_for_device
+                layout.kfx_mode=kfx_mode_for_device(layout.kfx_mode,Device(**job['send_to']))
             with contextlib.redirect_stdout(sys.stderr):
-                result=convert(job['source'],job['output_dir'],job['format'],Layout(**job.get('layout',{})),
+                result=convert(job['source'],job['output_dir'],job['format'],layout,
                                context,job.get('kindlegen',''))
             result=asdict(result)
             if sending:

@@ -153,7 +153,8 @@ def embed_font(book, layout, chars, cache_dir, ctx):
             book.warnings.append(f'字体「{path.stem}」缺少 {len(missing)} 个字符，阅读器可能对这些字符使用回退字体。')
         book.font_family = next((n.toUnicode() for n in font['name'].names if n.nameID in (16,1)),path.stem)
         ctx.check()
-        if layout.subset_font:
+        from .fonts import allow_subset
+        if layout.subset_font and allow_subset(layout.font_path):
             key = hashlib.sha256(original + ''.join(sorted(chars)).encode('utf-8') + b'lume-subset-v1').hexdigest()
             cache_dir.mkdir(parents=True,exist_ok=True)
             cached = cache_dir/(key+'.font')

@@ -2165,7 +2165,8 @@ class NativeKFXGenerator:
             ),
             # Use ASIN as book_id/content_id for simplicity
             IonStruct(IS("$492"), "book_id", IS("$307"), asin),
-            IonStruct(IS("$492"), "cde_content_type", IS("$307"), "PDOC"),
+            IonStruct(IS("$492"), "cde_content_type", IS("$307"),
+                      getattr(self, "lume_cde_content_type", "PDOC")),
             IonStruct(IS("$492"), "content_id", IS("$307"), asin),
             *(
                 [IonStruct(IS("$492"), "description", IS("$307"), description)]

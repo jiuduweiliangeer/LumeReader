@@ -173,3 +173,18 @@ def test_light_theme_and_file_picker_ignore_dark_system_palette(app,monkeypatch)
     FileDialogs.getOpenFileName(None,'Test')
     assert received['options']&QFileDialog.Option.DontUseNativeDialog
     app.setPalette(previous)
+
+
+def test_kfx_cover_profile_is_loaded_and_applied(app,tmp_path,monkeypatch):
+    import lume.storage as storage
+    from lume.ui import MainWindow
+    monkeypatch.setattr(storage,'DATA',tmp_path/'data')
+    storage.save_json('settings.json',{'layout':{'kfx_mode':'legacy'}})
+    monkeypatch.setattr(MainWindow,'refresh_devices',lambda self,*args,**kwargs:None)
+    window=MainWindow()
+    window.device_timer.stop()
+    assert window.kfx_mode.currentData()=='legacy'
+    assert window.layout_options().kfx_mode=='legacy'
+    window.kfx_mode.setCurrentIndex(window.kfx_mode.findData('personal'))
+    assert window.layout_options().kfx_mode=='personal'
+    window.close()

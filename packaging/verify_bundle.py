@@ -3,7 +3,7 @@
 import os,sys,json,subprocess,time,re,contextlib,io
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
-folder=root/'build-support'/'release-verification'
+folder=Path(os.environ.get('LUME_VERIFY_DIR',str(root/'build-support'/'release-verification')))
 folder.mkdir(parents=True,exist_ok=True)
 os.environ['LUME_DATA_DIR']=str(folder/'user data')
 sys.path.insert(0,str(root))
@@ -11,7 +11,7 @@ import bootstrap
 from lume.model import Layout,Context
 from lume.readers import read_book
 from lume.util import body_root
-exe=root/'dist'/'LumeReader'/'LumeWorker.exe'
+exe=Path(os.environ.get('LUME_VERIFY_EXE',str(root/'dist'/'LumeReader'/'LumeWorker.exe')))
 env=dict(os.environ)
 env['PATH']=str(Path(os.environ.get('WINDIR','C:/Windows'))/'System32')
 for key in ('PYTHONPATH','PYTHONHOME','CONDA_PREFIX','CONDA_DEFAULT_ENV','VIRTUAL_ENV'):

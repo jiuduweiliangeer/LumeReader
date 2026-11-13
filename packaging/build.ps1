@@ -11,4 +11,4 @@ if ($LASTEXITCODE -ne 0) { throw 'Icon build failed.' }
 if ($LASTEXITCODE -ne 0) { throw 'EXE build failed.' }
 & $ISCC (Join-Path $PSScriptRoot 'LumeReader.iss')
 if ($LASTEXITCODE -ne 0) { throw 'Installer build failed.' }
-Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $LumeRoot 'release\LumeReader-1.0.0-Setup-x64.exe')
+Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $LumeRoot 'release\LumeReader-1.1.0-Setup-x64.exe')

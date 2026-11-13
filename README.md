@@ -6,18 +6,27 @@ Windows 电子书转换与 Kindle 书架管理工具，使用 Python / PyQt6 开
 
 [下载 Windows 安装包](https://github.com/jiuduweiliangeer/LumeReader/releases/latest) · [完整使用说明](docs/USAGE.md) · [构建安装包](docs/BUILD.md) · [开源协议](LICENSE.md)
 
+## v1.1.0 更新：新增与修复
+
+1. **兼容与界面修复**：增加 Voyage 等旧款 Kindle 的 KFX 书架封面兼容与封面缓存恢复；修复帮助页中文正文丢失、Markdown 表格和图片显示。
+2. **逐本设置封面**：批量添加时可勾选“为每本书单独设置封面”，按向导逐本选图或保留原封面；也可编辑已加入队列的书籍。直接发送保持原文件。
+3. **设备预设与格式推荐**：提供七种阅读预设，连接 Kindle 后在转换前显示推荐格式与原因，特殊机型自动切换，也可手动指定型号和格式。内置霞鹜文楷、汇文明朝、悠哉字体，保留自备字体入口。
+4. **摘抄管理与导出**：读取或导入 My Clippings.txt，按书籍分类查看划线、笔记和书签，支持搜索、分页与重复导入去重，可导出印象笔记 / Evernote 可导入的 ENEX，以及 Markdown。[查看摘抄界面示例](docs/images/clippings.png)。
+
+验证：93 项自动测试通过，独立 EXE 完成 56 次格式转换（其中 49 次为非 TXT 输入互转）；ENEX / ENML 通过官方 DTD 校验。Voyage 真机书架显示仍需设备复核，旧 PDOC KFX 请重新转换并发送。详见 [更新记录](docs/CHANGELOG.md) 和 [Voyage 封面说明](docs/VOYAGE_COVERS.md)。
+
 ![书籍工作台](docs/images/workspace.png)
 
 ## 安装后可以直接做什么
 
-- Windows 10 / 11，64 位。下载 Release 中的 `LumeReader-1.0.0-Setup-x64.exe` 并运行。
+- Windows 10 / 11，64 位。下载 Release 中的 `LumeReader-1.1.0-Setup-x64.exe` 并运行。
 - 安装包已包含 Python、PyQt6 和转换所需的开源组件，**不用安装 Python、Calibre 或 Calibre 插件**。
 - **TXT、EPUB、KFX、PDF、HTML、FB2 之间互转，安装本软件即可使用。**
 - **MOBI / AZW / AZW3 导入后转为上述六种格式，也不需要 KindleGen。**
 - **只有导出 MOBI / AZW3 需要额外提供 KindleGen**，详见下面的表格和官方下载链接。
 - Kindle Previewer 是可选的桌面预览工具；KFX 转换本身不依赖它。
 
-当前安装包未做代码签名。Release 同时提供 `SHA256SUMS.txt`，可使用 PowerShell 的 `Get-FileHash` 核对文件。
+当前安装包未做代码签名。Release 同时提供 `SHA256SUMS-1.1.0.txt`，可使用 PowerShell 的 `Get-FileHash` 核对文件。
 
 ## 格式与额外依赖
 
@@ -46,7 +55,7 @@ Windows 电子书转换与 Kindle 书架管理工具，使用 Python / PyQt6 开
 |---|---|---|---|
 | Amazon KindleGen (`kindlegen.exe`) | **导出 MOBI / AZW3 必需**；其他目标格式不需要 | Amazon 已将工作流转向 [Kindle Previewer 官方页面](https://kdp.amazon.com/en_US/help/topic/G202131170)；本机验证使用 Previewer 3 发行版附带的 KindleGen | 自动查找常见位置；也可在“设置与帮助 → MOBI / AZW3 编译器”选择该文件 |
 | Amazon Kindle Previewer | 可选，用于电脑上检查 EPUB 排版 | [Amazon 官方下载与说明](https://kdp.amazon.com/en_US/help/topic/G202131170) | 安装后用它打开生成的 EPUB；并非 KFX 转换依赖 |
-| TTF / OTF 字体 | 可选，希望指定阅读字体时 | 使用自己有权使用的字体，例如 [霞鹜文楷官方项目](https://github.com/lxgw/LxgwWenKai) | 在阅读样式中选择字体，或设置字体文件夹 |
+| TTF / OTF 字体 | 可选，内置字体之外希望自行选用时 | 使用自己有权使用的字体，例如 [霞鹜文楷官方项目](https://github.com/lxgw/LxgwWenKai) | 在阅读样式中选择字体，或设置字体文件夹 |
 
 **KindleGen 与 Kindle Previewer 不是同一个依赖。** Amazon 后续发行版可能调整内置文件，不能保证最新 Previewer 一定带有 `kindlegen.exe`。软件实际检测的是该编译器；如果安装后没有它，EPUB / KFX / PDF 等仍可直接转换。本项目不捆绑 KindleGen，也不提供第三方修改版编译器。
 
@@ -65,6 +74,33 @@ Windows 电子书转换与 Kindle 书架管理工具，使用 Python / PyQt6 开
 
 批量任务逐本处理，一本失败后继续下一本。发送失败时保留本地转换结果。同名输出自动编号，不覆盖原始输入。
 
+### 设备推荐、预设和逐本封面
+
+默认输出 KFX。连接设备后，**转换前**在输出格式下方显示推荐及原因，特殊机型自动切换；用户仍可自行选择。自动检测不到型号时，可在设备栏手动指定。
+
+| 设备 | 默认推荐 | 说明 |
+|---|---|---|
+| Paperwhite、Oasis、Scribe、较新的入门 Kindle | KFX | USB 盘符同步旧款书架缩略图，MTP 使用个人文档模式 |
+| Voyage | 已配置 KindleGen 时 AZW3，否则 KFX 旧款封面兼容模式 | KFX 需要通过软件发送来同步独立缩略图 |
+| Paperwhite 1、Kindle 3 / 4 / Touch | AZW3；无 KindleGen 时 PDF | 不推荐 KFX |
+| Kindle 1 / 2 / DX | MOBI；无 KindleGen 时 PDF | 不使用 KFX 或 AZW3 |
+
+阅读预设包含 **Paperwhite 6、Voyage、6 英寸入门版、Paperwhite 5、Oasis、Scribe 10.2 / 11 英寸**。可自由调整行距、段距、缩进和字号；PDF 页面尺寸跟随预设。切换预设保留已选字体和封面。
+
+批量添加前勾选 **“为每本书单独设置封面”**，即可逐本选图或保留原封面。已添加书籍可在“封面”页点击“逐本设置选中书籍的封面”。取消向导不会丢失队列；开始转换时会继续引导尚未确认的书籍。直接发送不改封面。
+
+内置 **霞鹜文楷、汇文明朝（符号修正版）、悠哉字体**，安装后可直接选择。仓耳今楷、京华老宋、上图东观体等自备字体仍可从本地字体目录选择。字体来源和分发范围见 [字体说明](docs/FONTS.md)。
+
+### 摘抄
+
+侧栏“摘抄”支持从当前 Kindle 的 `My Clippings.txt` 读取，或导入电脑上的副本。按书名与作者分组，区分划线、笔记、书签，支持全文搜索和分页；重复导入自动去重，原始文件不修改。
+
+- **导出 ENEX**：每本书生成一条笔记，在印象笔记 / Evernote 桌面端的导入功能中选择该文件。
+- **导出 Markdown**：保留书名、作者、正文、页码、位置与原始记录时间，可放入 Obsidian 等笔记库。
+- 可导出当前书籍或全部书籍，不需要账号授权或插件。仅导出文件，不直接连接笔记服务。
+
+![摘抄界面示例](docs/images/clippings.png)
+
 ### Kindle 书架
 
 连接并解锁 Kindle 后，书架显示设备书籍、格式、所在目录和剩余空间。支持搜索、筛选、勾选、保存到电脑及批量删除。删除前先备份原文件，批注与阅读记录文件保留。
@@ -77,6 +113,10 @@ Windows 电子书转换与 Kindle 书架管理工具，使用 Python / PyQt6 开
 | 不能直接放入 documents 阅读 | EPUB 等；先转为设备支持的格式，或使用 [Amazon Send to Kindle](https://www.amazon.com/sendtokindle) |
 
 支持传统 USB 盘符和新款 Kindle 的 MTP。本项目不修改 Kindle 原生收藏夹。发送时会同步可用封面缩略图并回读校验；设备最终显示受固件和缓存影响。
+
+**Kindle Voyage / 旧款封面：** 1.1.0 起，“转换并发送”的 KFX 自动模式会对 USB 盘符设备生成 EBOK 书籍，并同步书架缩略图；MTP 设备继续使用 PDOC 个人文档。“仅转换”给 Voyage 使用时，在“设置 → KFX 封面兼容”选“旧款 Kindle / Voyage”，随后用软件发送。直接拖入 documents 不会同步独立缩略图。
+
+已用旧版生成的 PDOC KFX，需要以旧款模式重新转换并发送；“直接发送”保留原文件，无法改变它的文档类型。USB 设备若联网后封面消失，重新连接并刷新软件书架，会恢复本软件缓存且仍有关联书籍的缩略图。恢复只处理封面，不修改书籍、批注或阅读记录。固件限制及操作步骤见 [Voyage 封面说明](docs/VOYAGE_COVERS.md)。
 
 ### 排版与封面
 

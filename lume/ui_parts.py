@@ -4,7 +4,12 @@ from PyQt6.QtWidgets import (QFrame, QWidget, QLabel, QPushButton, QVBoxLayout, 
                             QTableWidget, QAbstractItemView, QHeaderView)
 from .model import Layout
 
+_system_fonts_loaded=False
+
 def load_system_fonts():
+    global _system_fonts_loaded
+    if _system_fonts_loaded: return
+    _system_fonts_loaded=True
     from pathlib import Path
     from PyQt6.QtGui import QFontDatabase
     for name in ("msyh.ttc", "msyhbd.ttc", "segoeui.ttf"):
@@ -236,7 +241,9 @@ class ReaderPreview(QWidget):
         p.restore()
         p.setPen(QColor('#b0beb3'))
         p.setFont(QFont('Segoe UI',8))
-        p.drawText(QRectF(rect.x(),rect.bottom()-24,rect.width(),18),Qt.AlignmentFlag.AlignCenter,'KPW6  /  排版预览')
+        from .presets import PRESETS
+        title=PRESETS.get(self.options.screen_profile,PRESETS['paperwhite6'])['name'].split(' · ')[0]
+        p.drawText(QRectF(rect.x(),rect.bottom()-24,rect.width(),18),Qt.AlignmentFlag.AlignCenter,title+' / 排版预览')
 
 from pathlib import Path as _Path
 _ICON_DIR=_Path(__file__).parent/'assets'

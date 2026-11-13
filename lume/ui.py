@@ -19,12 +19,16 @@ from .jobs import Task,QueueRunner
 from .ui_library import DeviceWorkspace,LibraryPanel
 from .ui_theme import FileDialogs as QFileDialog,apply_theme
 
-class MainWindow(DeviceWorkspace,QMainWindow):
+from .ui_upgrade import UpgradeControls
+from .presets import PRESETS
+
+class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
     def __init__(self,files=None):
         super().__init__()
         self.config=settings()
         self.history=load_json('history.json',[])
         self.sources=[]
+        self.book_covers={}
         self.tasks=[]
         self.font_id=-1
         self.runner=QueueRunner(self)
@@ -55,7 +59,7 @@ class MainWindow(DeviceWorkspace,QMainWindow):
         side.addWidget(label('电子书工具','Muted'))
         side.addSpacing(35)
         self.nav=[]
-        for i,text in enumerate(['01   书籍工作台','02   已完成','03   设置与帮助']):
+        for i,text in enumerate(['01   书籍工作台','02   已完成','03   摘抄','04   设置与帮助']):
             b=button(text,lambda checked=False,index=i:self.switch(index),'Nav')
             b.setCheckable(True)
             side.addWidget(b)
@@ -69,7 +73,9 @@ class MainWindow(DeviceWorkspace,QMainWindow):
         outer.addWidget(self.stack,1)
         self.build_workspace()
         self.build_history()
+        self.build_clippings()
         self.build_settings()
+        self.kindlegen.editingFinished.connect(self.apply_recommendation)
         self.fill_fonts()
         self.apply_layout(self.config['layout'])
         self.refresh_history()
@@ -97,6 +103,9 @@ class MainWindow(DeviceWorkspace,QMainWindow):
         page=self.page('书籍工作台','批量转换、直接发送与设备书籍管理')
         page.addWidget(self.build_device_bar())
         self.workspace_tabs=QTabWidget()
+        self.workspace_tabs.tabBar().setUsesScrollButtons(False)
+        self.workspace_tabs.tabBar().setMinimumWidth(300)
+        self.workspace_tabs.tabBar().setExpanding(False)
         local=QWidget()
         row=QHBoxLayout(local)
         row.setContentsMargins(0,12,0,0)
@@ -122,6 +131,9 @@ class MainWindow(DeviceWorkspace,QMainWindow):
         self.clear_button=button('清空',self.clear_queue,'Quiet')
         head.addWidget(self.clear_button)
         q.addLayout(head)
+        self.individual_covers=QCheckBox('为每本书单独设置封面')
+        self.individual_covers.setChecked(self.config.get('individual_covers',False))
+        q.addWidget(self.individual_covers)
         self.queue=table(['书籍','格式','大小','状态'])
         self.queue.setMinimumHeight(130)
         self.queue.itemSelectionChanged.connect(self.select_preview)
@@ -139,13 +151,16 @@ class MainWindow(DeviceWorkspace,QMainWindow):
         self.output_format=QComboBox()
         for fmt,text in [('epub','EPUB · 通用 / 无线发送'),('azw3','AZW3 · Kindle 兼容'),
                          ('kfx','KFX · Kindle 增强排版'),('mobi','MOBI · 双格式兼容'),
-                         ('pdf','PDF · KPW6 页面'),('txt','TXT · 纯文本'),
+                         ('pdf','PDF · 设备页面'),('txt','TXT · 纯文本'),
                          ('html','HTML · 单文件网页'),('fb2','FB2 · 结构化文本')]:
             self.output_format.addItem(text,fmt)
         outrow.addWidget(self.output_format,1)
         export.addLayout(outrow)
         self.hint=label('保留目录、排版与字体；可通过 Send to Kindle 上传。','Muted',True)
         export.addWidget(self.hint)
+        self.recommendation_hint=label('默认推荐 KFX。连接 Kindle 后根据型号推荐，可手动调整。','Muted',True)
+        self.recommendation_hint.setStyleSheet('color:#44715a;font-size:12px;')
+        export.addWidget(self.recommendation_hint)
         self.output_format.currentIndexChanged.connect(self.format_changed)
         self.output_format.setCurrentIndex(max(0,self.output_format.findData(self.config.get('format','kfx'))))
         self.format_changed()
@@ -181,7 +196,10 @@ class MainWindow(DeviceWorkspace,QMainWindow):
         inspector,ins=card()
         inspector.setFixedWidth(320)
         ins.addWidget(label('阅读样式','Section'))
-        ins.addWidget(label('KINDLE PAPERWHITE 6','Badge'))
+        self.preset_combo=QComboBox()
+        for key,profile in PRESETS.items():self.preset_combo.addItem(profile['name'],key)
+        self.preset_combo.currentIndexChanged.connect(self.use_preset)
+        ins.addWidget(self.preset_combo)
         tabs=QTabWidget()
         sw=QWidget()
         sl=QVBoxLayout(sw)
@@ -227,7 +245,7 @@ class MainWindow(DeviceWorkspace,QMainWindow):
         self.subset.setChecked(True)
         sl.addWidget(self.subset)
         sl.addWidget(label('Kindle 阅读时请选择“出版商字体”。AZW3 字号随设备设置缩放；此处调整默认比例。','Muted',True))
-        sl.addWidget(button('恢复 KPW6 舒适预设',lambda:self.apply_layout(Layout().to_dict()),'Quiet'))
+        sl.addWidget(button('恢复当前预设默认值',self.use_preset,'Quiet'))
         sl.addStretch()
         style_scroll=QScrollArea()
         style_scroll.setWidgetResizable(True)
@@ -243,6 +261,10 @@ class MainWindow(DeviceWorkspace,QMainWindow):
         cw=QWidget()
         cl=QVBoxLayout(cw)
         cl.setContentsMargins(0,14,0,0)
+        self.cover_edit_button=button('逐本设置选中书籍的封面…',self.edit_cover_choices,'Primary')
+        self.cover_edit_button.setEnabled(self.individual_covers.isChecked())
+        cl.addWidget(self.cover_edit_button)
+        self.individual_covers.toggled.connect(self.individual_covers_changed)
         self.cover_preview=QLabel('保留原书封面')
         self.cover_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.cover_preview.setMinimumHeight(300)
@@ -254,7 +276,7 @@ class MainWindow(DeviceWorkspace,QMainWindow):
         cl.addWidget(self.cover_path)
         cl.addWidget(button('选择封面图片…',self.choose_cover,'Primary'))
         cl.addWidget(button('清除选择 · 保留原书封面',lambda:self.set_cover(''),'Quiet'))
-        cl.addWidget(label('封面应用于本批书籍，并在有线发送时同步到 Kindle 书库。支持 JPG、PNG、WebP。','Muted',True))
+        cl.addWidget(label('上方图片为统一封面。勾选“为每本书单独设置封面”后，改用逐本选择；直接发送保留原文件。','Muted',True))
         cover_scroll=QScrollArea()
         cover_scroll.setWidgetResizable(True)
         cover_scroll.setWidget(cw)
@@ -311,6 +333,15 @@ class MainWindow(DeviceWorkspace,QMainWindow):
         panel,layout=card()
         form=QFormLayout()
         form.setVerticalSpacing(16)
+        self.kfx_mode=QComboBox()
+        for title,value in (('自动 · 发送时适配设备','auto'),
+                            ('旧款 Kindle / Voyage · 书架封面兼容','legacy'),
+                            ('新款 Kindle · 个人文档','personal')):
+            self.kfx_mode.addItem(title,value)
+        self.kfx_mode.setCurrentIndex(max(0,self.kfx_mode.findData(self.config['layout'].get('kfx_mode','auto'))))
+        form.addRow('KFX 封面兼容',self.kfx_mode)
+        form.addRow('',label('自动模式：USB 盘符设备用旧款模式，MTP 设备用个人文档。\n'
+                             '仅转换给 Voyage 使用时，请选旧款模式，再用软件发送以同步书架封面。','Muted',True))
         self.encoding=QComboBox()
         for value in ('auto','utf-8','utf-8-sig','gb18030','utf-16','big5'):
             self.encoding.addItem('自动检测' if value=='auto' else value,value)
@@ -361,17 +392,16 @@ class MainWindow(DeviceWorkspace,QMainWindow):
         dialog=QDialog(self)
         dialog.setWindowTitle('轻阅 · '+('使用说明' if filename=='README.md' else '开源协议'))
         dialog.resize(950,760)
+        dialog.setMinimumSize(850,600)
         layout=QVBoxLayout(dialog)
-        browser=QTextBrowser()
+        from .help_view import DocumentBrowser
+        browser=DocumentBrowser()
         browser.setOpenLinks(False)
         browser.setOpenExternalLinks(False)
         def display(path):
             path=path.resolve()
             if not path.is_file(): return
-            browser.document().setBaseUrl(QUrl.fromLocalFile(str(path.parent)+'/'))
-            text=path.read_text(encoding='utf-8')
-            if path.suffix.lower()=='.md': browser.setMarkdown(text)
-            else: browser.setPlainText(text)
+            browser.display(path)
         def navigate(url):
             if url.scheme() in ('http','https'):
                 QDesktopServices.openUrl(url)
@@ -393,13 +423,21 @@ class MainWindow(DeviceWorkspace,QMainWindow):
         data.update({key:spin.value() for key,spin in self.spins.items()})
         data.update(indent_mode=self.indent_mode.currentData(),alignment=self.alignment.currentData(),
                     font_path=self.font_combo.currentData() or '',subset_font=self.subset.isChecked(),
-                    cover_path=self.cover_path.text())
+                    cover_path='' if self.individual_covers.isChecked() else self.cover_path.text(),
+                    screen_profile=self.preset_combo.currentData() or 'paperwhite6')
+        from .fonts import allow_subset
+        data['subset_font']=data['subset_font'] and allow_subset(data['font_path'])
         if hasattr(self,'encoding'):
             data.update(encoding=self.encoding.currentData(),join_lines=self.join_lines.isChecked(),
-                        chapter_pattern=self.chapter_pattern.text().strip(),margin=self.pdf_margin.value())
+                        chapter_pattern=self.chapter_pattern.text().strip(),margin=self.pdf_margin.value(),
+                        kfx_mode=self.kfx_mode.currentData())
         return Layout(**data)
 
     def apply_layout(self,data):
+        self.preset_combo.blockSignals(True)
+        self.preset_combo.setCurrentIndex(max(0,self.preset_combo.findData(data.get('screen_profile','paperwhite6'))))
+        self.preset_combo.blockSignals(False)
+        if hasattr(self,'pdf_margin'):self.pdf_margin.setValue(data.get('margin',18))
         for key,spin in self.spins.items(): spin.setValue(data.get(key,getattr(Layout(),key)))
         self.indent_mode.setCurrentIndex(max(0,self.indent_mode.findData(data.get('indent_mode','missing'))))
         self.alignment.setCurrentIndex(max(0,self.alignment.findData(data.get('alignment','justify'))))
@@ -415,10 +453,8 @@ class MainWindow(DeviceWorkspace,QMainWindow):
         self.font_combo.blockSignals(True)
         self.font_combo.clear()
         self.font_combo.addItem('使用阅读器默认字体','')
-        folder=Path(self.config['font_dir'])
-        if folder.is_dir():
-            for path in sorted([*folder.rglob('*.ttf'),*folder.rglob('*.otf')],key=lambda p:p.name)[:300]:
-                if path.stat().st_size>=12: self.font_combo.addItem(path.stem,str(path))
+        from .fonts import available_fonts
+        for title,path in available_fonts(self.config['font_dir']):self.font_combo.addItem(title,path)
         if previous and self.font_combo.findData(previous)<0: self.font_combo.addItem(Path(previous).stem,previous)
         self.font_combo.setCurrentIndex(max(0,self.font_combo.findData(previous)))
         self.font_combo.blockSignals(False)
@@ -429,6 +465,11 @@ class MainWindow(DeviceWorkspace,QMainWindow):
         self.font_id=-1
         self.preview.family='Microsoft YaHei'
         path=self.font_combo.currentData()
+        from .fonts import allow_subset
+        allowed=allow_subset(path or '')
+        self.subset.setEnabled(allowed)
+        if not allowed:self.subset.setChecked(False)
+        self.subset.setToolTip('此字体保留完整原文件，不生成字形子集。' if not allowed else '')
         if path and Path(path).is_file():
             self.font_id=QFontDatabase.addApplicationFont(path)
             families=QFontDatabase.applicationFontFamilies(self.font_id)
@@ -484,6 +525,7 @@ class MainWindow(DeviceWorkspace,QMainWindow):
             else: expanded.append(value)
         paths=expanded
         rejected=[]
+        added=[]
         existing={value.casefold() for value in self.sources}
         for value in paths:
             path=Path(value)
@@ -494,6 +536,7 @@ class MainWindow(DeviceWorkspace,QMainWindow):
             if full.casefold() in existing: continue
             existing.add(full.casefold())
             self.sources.append(full)
+            added.append(full)
             row=self.queue.rowCount()
             self.queue.insertRow(row)
             for col,text in enumerate((path.stem,path.suffix[1:].upper(),format_size(path.stat().st_size),'待转换')):
@@ -506,6 +549,7 @@ class MainWindow(DeviceWorkspace,QMainWindow):
         self.empty.setVisible(not self.sources)
         if self.sources and self.queue.currentRow()<0: self.queue.selectRow(0)
         self.update_actions()
+        if added and self.individual_covers.isChecked():self.edit_cover_choices(added)
         if rejected: QMessageBox.information(self,'未添加的文件','格式不受支持：\n'+'\n'.join(rejected[:10]))
 
     def queue_checks_changed(self):
@@ -515,6 +559,7 @@ class MainWindow(DeviceWorkspace,QMainWindow):
     def remove_selected(self):
         if self._batch_busy: return
         for row in reversed(self.queue.checked_rows()):
+            self.book_covers.pop(self.sources[row],None)
             self.sources.pop(row)
             self.queue.removeRow(row)
         self.queue_checks_changed()
@@ -524,6 +569,7 @@ class MainWindow(DeviceWorkspace,QMainWindow):
     def clear_queue(self):
         if self._batch_busy: return
         self.sources.clear()
+        self.book_covers.clear()
         self.queue.setRowCount(0)
         self.queue_label.setText('本地书籍  /  0 本')
         self.empty.show()
@@ -574,7 +620,8 @@ class MainWindow(DeviceWorkspace,QMainWindow):
             layout.validate()
             self.config.update(layout=layout.to_dict(),output=self.output_path.text().strip() or str(ROOT/'output'),
                                kindlegen=self.kindlegen.text().strip(),font_dir=self.font_dir.text().strip(),
-                               format=self.output_format.currentData())
+                               format=self.output_format.currentData(),individual_covers=self.individual_covers.isChecked())
+            self.config['layout']['cover_path']=self.cover_path.text()
             save_json('settings.json',self.config)
             if notify:
                 self.fill_fonts()
@@ -589,11 +636,12 @@ class MainWindow(DeviceWorkspace,QMainWindow):
                'azw3':'Kindle USB 推荐格式，保留嵌入字体；需要 KindleGen。',
                'kfx':'支持 Kindle 有线发送、目录、字体与封面。',
                'mobi':'双格式兼容文件；旧 MOBI7 不支持嵌入字体。',
-               'pdf':'按 KPW6 屏幕比例生成页面，带目录链接和书签。',
+               'pdf':'按所选阅读预设的屏幕尺寸生成页面，带目录链接和书签。',
                'txt':'全角空格缩进与文本目录；无法保存字体和精确行距。',
                'html':'含图片与字体的单文件 HTML。',
                'fb2':'保留章节结构；字体和段落显示由阅读器控制。'}
         self.hint.setText(hints.get(self.output_format.currentData(),''))
+        self.show_recommendation()
         self.update_actions()
 
     def start_direct_send(self):
@@ -624,6 +672,14 @@ class MainWindow(DeviceWorkspace,QMainWindow):
             if '.'+self.output_format.currentData() not in USB_FORMATS: return
         self._batch_rows=self.queue.checked_rows()
         if not self._batch_rows: return
+        if self.individual_covers.isChecked():
+            pending=[self.sources[r] for r in self._batch_rows if self.sources[r] not in self.book_covers]
+            if pending and not self.edit_cover_choices(pending):return
+        try:
+            layouts={r:self.layout_for_source(self.sources[r]) for r in self._batch_rows}
+        except Exception as exc:
+            QMessageBox.warning(self,'排版或封面有误',str(exc))
+            return
         self._batch_send=send
         self._batch_direct=False
         self._batch_results={}
@@ -631,7 +687,7 @@ class MainWindow(DeviceWorkspace,QMainWindow):
         self.busy(True)
         self.progress.setValue(0)
         jobs=[{'source':self.sources[row],'format':self.output_format.currentData(),'output_dir':self.config['output'],
-               'layout':self.layout_options().to_dict(),'kindlegen':self.config['kindlegen'],'_row':row} for row in self._batch_rows]
+               'layout':layouts[row],'kindlegen':self.config['kindlegen'],'_row':row} for row in self._batch_rows]
         if send:
             for job in jobs: job['send_to']=asdict(device)
         for row in self._batch_rows:
@@ -644,6 +700,9 @@ class MainWindow(DeviceWorkspace,QMainWindow):
         for b in (self.add_button,self.remove_button,self.clear_button): b.setEnabled(not value)
         self.cancel_button.setEnabled(value)
         self.output_format.setEnabled(not value)
+        self.individual_covers.setEnabled(not value)
+        self.cover_edit_button.setEnabled(not value and self.individual_covers.isChecked())
+        self.preset_combo.setEnabled(not value)
         self.update_actions()
 
     def job_started(self,row):
@@ -696,6 +755,7 @@ class MainWindow(DeviceWorkspace,QMainWindow):
 
     def batch_finished(self,cancelled):
         self.busy(False)
+        self.apply_recommendation()
         converted=sum(r.get('operation')!='send' for r in self._batch_results.values())
         sent=sum(bool(r.get('device_path')) for r in self._batch_results.values())
         message=f'原文件已发送 {sent} 本' if self._batch_direct else f'已转换 {converted} 本'

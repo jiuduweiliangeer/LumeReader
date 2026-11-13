@@ -21,7 +21,7 @@ Inno 自定义路径使用 `-ISCC '路径\ISCC.exe'`。
 产物：
 - `dist/LumeReader/LumeReader.exe`：GUI。
 - `dist/LumeReader/LumeWorker.exe`：后台转换与命令行入口，不能单独拆走。
-- `release/LumeReader-1.0.0-Setup-x64.exe`：安装包。
+- `release/LumeReader-1.1.0-Setup-x64.exe`：安装包。
 
 采用目录式 EXE 由 Inno 安装，避免每次启动重复解压。最终用户不需要 Python 开发环境。
 

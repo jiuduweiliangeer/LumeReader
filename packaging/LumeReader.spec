@@ -9,7 +9,7 @@ import comtypes.client
 comtypes.client.GetModule('portabledeviceapi.dll')
 comtypes.client.GetModule('portabledevicetypes.dll')
 hidden=['PyQt6.QtSvg','PyQt6.QtPrintSupport','comtypes.gen.PortableDeviceApiLib','comtypes.gen.PortableDeviceTypesLib']
-for module in ('lume','kindleunpack','kfxgen','kfxlib','comtypes','ziafont','ziamath','latex2mathml'):
+for module in ('lume','kindleunpack','kfxgen','kfxlib','comtypes','ziafont','ziamath','latex2mathml','markdown_it','mdurl'):
     hidden+=collect_submodules(module)
 datas=[(str(root/'lume'/'assets'),'lume/assets'),
        (str(root/'licenses'),'licenses'),(str(root/'docs'),'docs'),(str(root/'examples'),'examples')]
@@ -21,7 +21,7 @@ for filename in ('README.md','LICENSE','LICENSE.md','THIRD_PARTY.md','requiremen
 for module in ('reportlab','pymupdf'):
     datas+=collect_data_files(module)
 for name in ('PyQt6','PyQt6-Qt6','PyQt6-sip','lxml','PyMuPDF','beautifulsoup4','soupsieve',
-             'tinycss2','cssselect2','webencodings','fonttools','reportlab','Pillow','comtypes','charset-normalizer','pypdf'):
+             'tinycss2','cssselect2','webencodings','fonttools','reportlab','Pillow','comtypes','charset-normalizer','pypdf','markdown-it-py','mdurl'):
     datas+=copy_metadata(name)
 binaries=[]
 for filename in ('sqlite3.dll','libcrypto-3-x64.dll','libssl-3-x64.dll','libbz2.dll','ffi-8.dll'):

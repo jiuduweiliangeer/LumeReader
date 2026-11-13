@@ -20,7 +20,8 @@ def light_palette():
     return palette
 
 def apply_theme(app):
-    from .ui_parts import STYLE
+    from .ui_parts import STYLE,load_system_fonts
+    load_system_fonts()
     app.setStyle('Fusion')
     app.setPalette(light_palette())
     app.setStyleSheet(STYLE)
@@ -38,6 +39,9 @@ class FileDialogs:
     @staticmethod
     def getOpenFileName(*args,**kwargs):
         return NativeFileDialog.getOpenFileName(*args,**FileDialogs._options(kwargs))
+    @staticmethod
+    def getSaveFileName(*args,**kwargs):
+        return NativeFileDialog.getSaveFileName(*args,**FileDialogs._options(kwargs))
     @staticmethod
     def getExistingDirectory(*args,**kwargs):
         return NativeFileDialog.getExistingDirectory(*args,**FileDialogs._options(kwargs))

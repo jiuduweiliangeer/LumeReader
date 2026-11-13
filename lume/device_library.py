@@ -245,3 +245,15 @@ def remove_books(device,books,backup_dir,progress=None):
     except Exception as exc:
         raise ConversionError(f'{exc}\n已移除 {len(receipt["removed"])} 本；备份位于 {backup_dir}') from exc
     return receipt
+
+
+def refresh_books(device,progress=None):
+    """Refresh the visible shelf and repair cached covers after reconnecting."""
+    snapshot=list_books(device,progress)
+    from .cover_sync import restore_usb_covers
+    try:
+        snapshot['covers']=restore_usb_covers(device,progress)
+    except (OSError,ConversionError) as exc:
+        # A cover/cache failure must not hide an otherwise readable library.
+        snapshot['covers']={'restored':0,'errors':[str(exc)]}
+    return snapshot

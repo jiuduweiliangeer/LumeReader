@@ -1,8 +1,10 @@
 ﻿#ifndef AppVersion
-#define AppVersion "1.0.0"
+#define AppVersion "1.1.0"
 #endif
 #define AppName "轻阅 Lume Reader"
+#ifndef SourceDir
 #define SourceDir "..\dist\LumeReader"
+#endif
 [Setup]
 AppId={{8EC24CA1-E9B6-4EF5-A7A2-21D281C95FB5}
 AppName={#AppName}

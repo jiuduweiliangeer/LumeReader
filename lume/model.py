@@ -26,8 +26,15 @@ class Layout:
     encoding: str = 'auto'
     join_lines: bool = False
     chapter_pattern: str = ''
+    kfx_mode: str = 'auto'
+    screen_profile: str = 'paperwhite6'
 
     def validate(self):
+        from .presets import PRESETS
+        if self.screen_profile not in PRESETS:
+            raise ConversionError('无效的阅读预设。')
+        if self.kfx_mode not in ('auto', 'personal', 'legacy'):
+            raise ConversionError('无效的 KFX 封面兼容模式。')
         for key, lo, hi in [('font_size',10,40), ('line_height',1,3),
                            ('paragraph_gap',0,3), ('indent',0,4), ('margin',8,50)]:
             if not lo <= float(getattr(self, key)) <= hi:
