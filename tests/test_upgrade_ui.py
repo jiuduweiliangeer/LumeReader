@@ -177,3 +177,27 @@ def test_cover_question_only_occurs_on_batch_conversion(window,tmp_path,monkeypa
     assert calls==([2] if count==2 else [])
     assert len(jobs)==expected and len(window.sources)==count
     assert all(Path(p).is_file() for p in paths)
+
+def test_integrated_compiler_has_no_install_prompt_and_recommends_voyage(window,tmp_path,monkeypatch):
+    import lume.paths as paths
+    bundle=tmp_path/'bundle';compiler=bundle/'tools'/'kindlegen.exe'
+    compiler.parent.mkdir(parents=True);compiler.write_bytes(b'MZ-test-only')
+    monkeypatch.setattr(paths,'APP_ROOT',bundle)
+    window.kindlegen.clear();window.compiler_changed()
+    assert '已内置' in window.compiler_status.text()
+    assert window.compiler_status.toolTip()==str(compiler)
+    window.device_combo.addItem('Voyage',Device('Voyage','usb',str(tmp_path),model='voyage'))
+    window.device_changed()
+    assert window.output_format.currentData()=='azw3'
+    assert '就绪' in window.hint.text() and '需要 KindleGen' not in window.hint.text()
+
+
+def test_expired_compiler_setting_reports_automatic_recovery(window,tmp_path,monkeypatch):
+    import lume.paths as paths
+    compiler=tmp_path/'bundle'/'tools'/'kindlegen.exe'
+    compiler.parent.mkdir(parents=True);compiler.write_bytes(b'MZ-test-only')
+    monkeypatch.setattr(paths,'APP_ROOT',compiler.parent.parent)
+    window.kindlegen.setText(str(tmp_path/'old install'/'kindlegen.exe'))
+    window.compiler_changed()
+    assert window._compiler_path==str(compiler)
+    assert '已自动使用内置组件' in window.compiler_status.text()

@@ -6,6 +6,10 @@ Windows 电子书转换与 Kindle 书架管理工具，使用 Python / PyQt6 开
 
 [下载 Windows 安装包](https://github.com/jiuduweiliangeer/LumeReader/releases/latest) · [完整使用说明](docs/USAGE.md) · [构建安装包](docs/BUILD.md) · [开源协议](LICENSE.md)
 
+## 本地集成构建 1.1.1
+
+本地集成安装包已包含 KindleGen，**AZW3 / MOBI 无需额外安装或手动配置**。设置页显示组件状态；旧外部路径失效时自动使用内置组件。连接 Voyage 后可直接推荐 AZW3。集成安装包仅在本地生成，公开 Release v1.1.0 仍按下方依赖表使用。[构建方式](docs/BUILD.md#本地集成-kindlegen)。
+
 ## v1.1.0 更新：新增与修复
 
 1. **兼容与界面修复**：增加 Voyage 等旧款 Kindle 的 KFX 书架封面兼容与封面缓存恢复；修复帮助页中文正文丢失、Markdown 表格和图片显示；主导航可收起为图标栏，并记住展开状态。

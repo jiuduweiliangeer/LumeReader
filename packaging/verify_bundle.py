@@ -16,6 +16,9 @@ env=dict(os.environ)
 env['PATH']=str(Path(os.environ.get('WINDIR','C:/Windows'))/'System32')
 for key in ('PYTHONPATH','PYTHONHOME','CONDA_PREFIX','CONDA_DEFAULT_ENV','VIRTUAL_ENV'):
     env.pop(key,None)
+require_bundled=os.environ.get('LUME_VERIFY_BUNDLED_KINDLEGEN')=='1'
+if require_bundled:
+    env.pop('KINDLEGEN',None)
 font=Path(os.environ.get('LUME_TEST_FONT',str(Path(os.environ.get('WINDIR','C:/Windows'))/'Fonts'/'simhei.ttf')))
 cover=root/'lume'/'assets'/'lume.png'
 records=[]
@@ -58,7 +61,14 @@ assert check.returncode==0,check.stderr.decode('utf-8','replace')
 diagnostics=json.loads(check.stdout)
 (folder/'self-check.json').write_text(json.dumps(diagnostics,ensure_ascii=False,indent=2),encoding='utf-8')
 formats=['epub','kfx','pdf','html','fb2','txt']
-if env.get('KINDLEGEN') and Path(env['KINDLEGEN']).is_file():formats+=['mobi','azw3']
+if require_bundled:
+    import hashlib
+    compiler=exe.parent/'_internal'/'tools'/'kindlegen.exe'
+    assert diagnostics.get('kindlegen_bundled') and Path(diagnostics['kindlegen']).resolve()==compiler.resolve()
+    manifest=json.loads((compiler.parent/'kindlegen-manifest.json').read_text(encoding='utf-8'))
+    assert hashlib.sha256(compiler.read_bytes()).hexdigest()==manifest['sha256']
+    print('Bundled KindleGen selected with no external KINDLEGEN or Python PATH',flush=True)
+if diagnostics.get('kindlegen'):formats+=['mobi','azw3']
 sources={fmt:call(root/'examples'/'阅读示例.txt',fmt,'seed') for fmt in formats if fmt!='txt'}
 for source_format,source in sources.items():
     for fmt in formats:

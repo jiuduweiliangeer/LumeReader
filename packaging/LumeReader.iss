@@ -1,9 +1,12 @@
 ﻿#ifndef AppVersion
-#define AppVersion "1.1.0"
+#define AppVersion "1.1.1"
 #endif
 #define AppName "轻阅 Lume Reader"
 #ifndef SourceDir
 #define SourceDir "..\dist\LumeReader"
+#endif
+#ifndef OutputBaseName
+#define OutputBaseName "LumeReader-" + AppVersion + "-Setup-x64"
 #endif
 [Setup]
 AppId={{8EC24CA1-E9B6-4EF5-A7A2-21D281C95FB5}
@@ -19,7 +22,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0.17763
 OutputDir=..\release
-OutputBaseFilename=LumeReader-{#AppVersion}-Setup-x64
+OutputBaseFilename={#OutputBaseName}
 SetupIconFile=..\lume\assets\lume.ico
 UninstallDisplayIcon={app}\LumeReader.exe
 LicenseFile=..\LICENSE

@@ -1,0 +1,15 @@
+Amazon KindleGen
+Copyright Amazon.com, Inc. and/or its affiliates. All rights reserved.
+
+This optional component is supplied locally for this integrated build.
+The KindleGen executable is preserved unchanged and remains Amazon software;
+it is not covered by LumeReader's AGPL source-code license.
+Use is subject to the applicable Amazon software license agreement.
+
+KindleGen license reference (October 24, 2012), reproduced by CELSYS:
+https://vd.clipstudio.net/clipcontent/paint/eula/20201210_PAINT_EULA_EN.pdf
+Amazon Kindle Previewer:
+https://kdp.amazon.com/en_US/help/topic/G202131170
+
+No permission to redistribute KindleGen is granted by the LumeReader project.
+The source repository and default public build do not contain this executable.

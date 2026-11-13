@@ -12,12 +12,26 @@ from .typography import declarations, css_for_chapter, matcher_for, computed_sty
 from .util import body_root, resolve_href
 from .writers import write_epub
 
+def bundled_kindlegen():
+    from .paths import APP_ROOT
+    path = APP_ROOT/'tools'/'kindlegen.exe'
+    return str(path) if path.is_file() else ''
+
+
 def find_kindlegen(configured=''):
-    if configured:
-        return str(Path(configured)) if Path(configured).is_file() else ''
+    if configured and Path(configured).is_file():
+        return str(Path(configured))
+    # Frozen resources live in _internal, independently of the working directory.
+    # A stale external path from an earlier installation must not hide this copy.
+    bundled = bundled_kindlegen()
+    if bundled:
+        return bundled
     from .paths import EXE_ROOT,USER_ROOT
     paths = [os.environ.get('KINDLEGEN',''),shutil.which('kindlegen') or '',
              str(EXE_ROOT/'tools'/'kindlegen.exe'),str(USER_ROOT/'tools'/'kindlegen.exe')]
+    found = next((p for p in paths if p and Path(p).is_file()), '')
+    if found:
+        return found
     if os.name=='nt':
         import winreg
         for hive in (winreg.HKEY_CURRENT_USER,winreg.HKEY_LOCAL_MACHINE):
@@ -63,7 +77,7 @@ def mobi_version(path):
 def compile_kindle(book,path,layout,ctx,workdir,kindlegen=''):
     tool=find_kindlegen(kindlegen)
     if not tool:
-        raise ConversionError('MOBI/AZW3 输出需要独立的 KindleGen 官方编译器。请在设置中选择 kindlegen.exe；不需要 Calibre。EPUB、KFX、PDF 可直接生成。')
+        raise ConversionError('未找到 MOBI/AZW3 转换组件。请重新安装含组件的版本，或在设置中选择 kindlegen.exe。其他输出格式可继续使用。')
     from .reflow import unlock_font_sizes
     unlock_font_sizes(book)
     epub=Path(workdir)/'source.epub'

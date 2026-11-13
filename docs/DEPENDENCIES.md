@@ -39,7 +39,7 @@ PyInstaller bootloader 使用 GPLv2-or-later 及 bootloader exception；例外�
 
 vendor/ 内 KindleUnpack、kfxgen、kfxlib、公式组件和字体数据保留上游声明，源码随仓库提供。修订及修改点见 [THIRD_PARTY.md](../THIRD_PARTY.md)。
 
-Amazon KindleGen 不包含在安装包内，由用户按 Amazon 条款另行安装。
+Amazon KindleGen 不包含在标准公开安装包内。可在本地集成构建中使用已有副本，随包保留组件说明与哈希清单；其授权独立于项目 AGPL，不属于仓库源码。详见 [本地集成构建](BUILD.md#本地集成-kindlegen)。
 
 每个 Release 的 tag 与源码压缩包对应其二进制版本，packaging/ 提供构建脚本。源代码、许可和依赖信息应随再发布版本提供。
 

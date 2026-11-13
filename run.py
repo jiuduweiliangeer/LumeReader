@@ -24,7 +24,7 @@ def main():
     args=parser.parse_args()
     if args.self_check:
         from PyQt6.QtCore import qVersion, PYQT_VERSION_STR
-        from lume.kindle_formats import find_kindlegen
+        from lume.kindle_formats import find_kindlegen,bundled_kindlegen
         from kfxgen.native_generator import NativeKFXGenerator
         import pymupdf, lxml, tinycss2, cssselect2, pypdf, bz2, ctypes
         from lume import __version__
@@ -40,7 +40,8 @@ def main():
             with Session() as session: device_count=len(session.kindle_ids())
         print(json.dumps({'version':__version__,'python':sys.executable,'python_version':sys.version.split()[0],
                           'qt':qVersion(),'pyqt':PYQT_VERSION_STR,'data_dir':str(USER_ROOT),
-                          'kindlegen':find_kindlegen(),'kfx':'native Python','calibre':'not used',
+                          'kindlegen':find_kindlegen(),'kindlegen_bundled':bool(bundled_kindlegen()),
+                          'kfx':'native Python','calibre':'not used',
                           'mtp_devices':device_count,'bundled_fonts':len(list(available_fonts(APP_ROOT/'missing-fonts'))),
                           'reading_presets':len(PRESETS),'clippings_export':['enex','md']},ensure_ascii=False))
         return 0

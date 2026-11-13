@@ -20,7 +20,7 @@ Local adaptations:
 
 Python/Qt dependencies are listed with versions in requirements.txt; their installed distribution metadata retains their individual licenses. PyQt6 / Qt, PyMuPDF, fontTools, ReportLab, Pillow, lxml, cssselect2, tinycss2, BeautifulSoup and comtypes are third-party packages.
 
-Amazon KindleGen is an optional, separately installed executable discovered locally. It is not bundled or redistributed here.
+Amazon KindleGen is optional in standard public builds and is not committed to this source repository. An explicit local integrated build can include a locally supplied copy, unchanged, with a hash manifest and separate notice. It remains subject to Amazon terms; no redistribution rights are granted by this project.
 
 ## Windows release
 

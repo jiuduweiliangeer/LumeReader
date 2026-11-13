@@ -59,7 +59,8 @@ class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
         self.build_history()
         self.build_clippings()
         self.build_settings()
-        self.kindlegen.editingFinished.connect(self.apply_recommendation)
+        self.kindlegen.editingFinished.connect(self.compiler_changed)
+        self.compiler_changed()
         self.fill_fonts()
         self.apply_layout(self.config['layout'])
         self.refresh_history()
@@ -336,11 +337,13 @@ class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
         self.pdf_margin.setValue(self.config['layout'].get('margin',18))
         form.addRow('PDF 页面留白',self.pdf_margin)
         self.kindlegen=QLineEdit(self.config.get('kindlegen',''))
-        self.kindlegen.setPlaceholderText('留空自动发现 KindleGen')
+        self.kindlegen.setPlaceholderText('留空使用内置组件，也可指定 kindlegen.exe')
         row=QHBoxLayout()
         row.addWidget(self.kindlegen,1)
         row.addWidget(button('浏览',self.choose_kindlegen))
-        form.addRow('MOBI / AZW3 编译器',row)
+        form.addRow('自定义编译器（可选）',row)
+        self.compiler_status=label('','Muted',True)
+        form.addRow('MOBI / AZW3',self.compiler_status)
         self.font_dir=QLineEdit(self.config['font_dir'])
         form.addRow('字体文件夹',self.font_dir)
         layout.addLayout(form)
@@ -349,7 +352,7 @@ class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
         layout.addWidget(label('格式与能力','Section'))
         layout.addWidget(label('EPUB / TXT / HTML / PDF / FB2：本地转换。\n'
             'KFX：支持目录、字体与封面。\n'
-            'MOBI / AZW3：导入可直接使用；导出需配置 KindleGen。\n'
+            'MOBI / AZW3：支持目录、封面与出版商字体，转换组件状态见上方。\n'
             'DOCX / Markdown：支持导入正文与章节。\n'
             '扫描 PDF 按图片保留，不含 OCR；复杂版式请复核。\n'
             'TXT / FB2 的字体、行距受到格式限制。\n'
@@ -586,7 +589,29 @@ class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
 
     def choose_kindlegen(self):
         path,_=QFileDialog.getOpenFileName(self,'选择 KindleGen',str(ROOT.parent),'KindleGen (kindlegen.exe)')
-        if path: self.kindlegen.setText(path)
+        if path:
+            self.kindlegen.setText(path)
+            self.compiler_changed()
+
+    def compiler_changed(self):
+        from .kindle_formats import find_kindlegen,bundled_kindlegen
+        configured=self.kindlegen.text().strip()
+        self._compiler_path=find_kindlegen(configured)
+        bundled=bundled_kindlegen()
+        is_bundled=bool(bundled and self._compiler_path and
+                        Path(self._compiler_path).resolve()==Path(bundled).resolve())
+        if is_bundled:
+            text='已内置，可直接转换，无需额外安装。'
+            if configured and not Path(configured).is_file():
+                text='原自定义路径不可用，已自动使用内置组件。'
+        elif self._compiler_path:
+            text='转换组件已就绪，可直接转换。'
+        else:
+            text='未找到转换组件；请安装含组件的版本，或指定 kindlegen.exe。'
+        self.compiler_status.setText(text)
+        self.compiler_status.setToolTip(self._compiler_path)
+        self.apply_recommendation()
+        self.format_changed()
 
     def save_settings(self,checked=False,notify=True):
         try:
@@ -608,14 +633,18 @@ class MainWindow(UpgradeControls,DeviceWorkspace,QMainWindow):
 
     def format_changed(self):
         hints={'epub':'保留目录、排版和字体；可通过 Send to Kindle 上传。',
-               'azw3':'Kindle USB 推荐格式，保留嵌入字体；需要 KindleGen。',
+               'azw3':'支持 Kindle 有线发送，保留目录、封面与嵌入字体。',
                'kfx':'支持 Kindle 有线发送、目录、字体与封面。',
                'mobi':'双格式兼容文件；旧 MOBI7 不支持嵌入字体。',
                'pdf':'按所选阅读预设的屏幕尺寸生成页面，带目录链接和书签。',
                'txt':'全角空格缩进与文本目录；无法保存字体和精确行距。',
                'html':'含图片与字体的单文件 HTML。',
                'fb2':'保留章节结构；字体和段落显示由阅读器控制。'}
-        self.hint.setText(hints.get(self.output_format.currentData(),''))
+        fmt=self.output_format.currentData()
+        hint=hints.get(fmt,'')
+        if fmt in ('azw3','mobi') and hasattr(self,'_compiler_path'):
+            hint+=' 转换组件已就绪。' if self._compiler_path else ' 请在设置中配置转换组件。'
+        self.hint.setText(hint)
         self.show_recommendation()
         self.update_actions()
 
